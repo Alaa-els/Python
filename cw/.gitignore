@@ -1,0 +1,9 @@
+data/legacy/
+*.sqlite3
+*.sqlite
+.env
+media/
+__pycache__/
+*.pyc
+.pytest_cache/
+dev.sqlite3
