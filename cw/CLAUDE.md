@@ -4,6 +4,7 @@ You are building the Commercial Workbench with Alaa Elsayed and Mo Ashour. Read 
 
 ## What this is
 - One Django codebase, two faces on the same records: the Contractor edition (product for small contractors, they pay) and the Consultant edition (Alaa's and Mo's own work). A project setting `my_role` decides the face.
+- Scope (D-14): a small contractor's whole commercial process on one database - handover budgets, bill and rates, variations raised on the phone, applications and certification, costs and CVR, cash flow and forecasts, records, correspondence and claims, reports. Bookkeeping, the estimating engine and drawing reading stay out.
 - Definition: docs/plan/CW_02_Blueprint_v0.md. Order and gates: docs/STAGES.md. Locked decisions: docs/DECISIONS.md (D-13 records that the CW set supersedes the earlier CCW set; a CCW id in an old document resolves through it). Never rederive these; if one does not fit the stage, stop and say so.
 
 ## How work happens (the stage protocol, docs/FOUNDATION.md section 2)
