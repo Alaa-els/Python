@@ -1,4 +1,5 @@
-data/legacy/
+data/legacy/*
+!data/legacy/README.md
 *.sqlite3
 *.sqlite
 .env
