@@ -9,7 +9,7 @@
 | R-03 | WTP IP or data clauses | D-06 before S01; Consultant face on Gamma test data unless permitted | S01 |
 | R-04 | Data protection ignored with real contractor data | D-10 before S10; backups and deletion on request (S28) | S10 |
 | R-05 | Site staff do not use it | Guided screens; one-page guide; Tony's site user reviews the S06 flow | S06 |
-| R-06 | Sinq or another vendor is cheaper and good enough | D-09 benchmark; the two faces are the difference | S17 |
+| R-06 | Sinq or another vendor is cheaper and good enough | D-09 benchmark; the two faces are the difference. 08-Sep-2026: the status vocabulary (Raised, Pricing, Submitted, Agreed, Declined, Closed) is standard UK commercial usage and may be used; Sinq's screen layouts, wording and table columns are not copied | S17 |
 | R-07 | No slack before July 2027 | Sales gate decides whether S18 to S29 happen | S17 |
 | R-08 | Hard-coding one company's layout or one project's rules | Layouts as templates, terms as settings; tests assert no constants | S02 onward |
 | R-09 | Existing tools rewritten instead of absorbed | Stage files name the tool to absorb; audit checks | S19, S24, S25 |

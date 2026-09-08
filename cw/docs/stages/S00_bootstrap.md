@@ -12,21 +12,22 @@
 - docs/plan/CW_02_Blueprint_v0.md section 7 (stack) only.
 
 ## 3. Decisions this stage depends on
-- D-04 (DEFAULT) stack. D-13 (LOCKED) document set. W-01 to W-11 (LOCKED).
+- D-04 (DEFAULT) stack. D-13 (LOCKED) document set. W-01 to W-12 (LOCKED).
 - D-06 and D-07 are OPEN and block S01, not S00: S00 creates no product feature and holds no data.
 
 ## 4. Changes
 - Project: `cw/` Django project with apps `core` (companies, users, roles, membership, settings, history helpers) and `projects` (empty for now). No models yet beyond Django's user.
 - Settings: `DATABASE_URL` from env, default `sqlite:///dev.sqlite3`; `MEDIA_ROOT` outside the repo; timezone Europe/London; British English locale; secret key from env.
 - Tooling: `requirements.txt` (django, django-simple-history, django-htmx, openpyxl, python-docx, pytest, pytest-django, dj-database-url, python-dotenv), `pytest.ini`, `.env.example`, `.gitignore` (data/legacy, *.sqlite3, .env, media, __pycache__).
-- Tests: `tests/test_hygiene.py` scanning every tracked .py, .md, .html, .txt for non-ASCII characters, en or em dashes, single-quoted Python string literals outside comments, and the strings "Claude", "Anthropic", "python-docx", "openpyxl" in docs and templates (the requirements file is exempt); `tests/test_settings.py` proving the database URL default and the media root location.
+- Tests: `tests/test_hygiene.py` scanning repo-authored .py, .md, .html and .txt files for non-ASCII characters other than currency symbols, en or em dashes, single-quoted Python string literals outside comments, and the strings "Claude", "Anthropic", "python-docx", "openpyxl" in docs and templates (the requirements file is exempt). `docs/plan/history/` is superseded reference content and is excluded from the scan (W-03). `tests/test_settings.py` proving the database URL default and the media root location.
 - Docs check: `tests/test_docs.py` proving every docs/plan/ file named in CLAUDE.md and SETUP.md exists, and that no file directly in docs/plan/ is named CCW_* (D-13).
 - Stage tooling: verify `.claude/commands/` and `.claude/agents/auditor.md` load (`/help`).
 - Data folders: `data/legacy/README.md`, `tests/fixtures/README.md`.
 - Dependencies added (W-09): the requirements list above, nothing else.
 
 ## 5. Tests to write
-- tests/test_hygiene.py::test_no_non_ascii_in_tracked_files
+- tests/test_hygiene.py::test_no_non_ascii_except_currency_in_authored_files
+- tests/test_hygiene.py::test_history_folder_excluded_from_scan
 - tests/test_hygiene.py::test_no_en_or_em_dashes
 - tests/test_hygiene.py::test_python_strings_double_quoted
 - tests/test_hygiene.py::test_no_tool_traces_in_docs_and_templates
