@@ -1,0 +1,433 @@
+<title>Tony Project Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--bg:#F4F6F3;--paper:#FFFFFF;--ink:#172033;--ink2:#4A5568;--ink3:#7C8794;--rule:#C9D0C7;--soft:#E2E7E0;
+ --con:#B7791F;--conbg:#FBF3E3;--cons:#1F6F6B;--consbg:#E3F1F0;--new:#5A4E8C;--newbg:#ECE9F5;--flag:#A63D2F;--flagbg:#F8E9E6;--ok:#5B6B4E;--okbg:#EDF2E6;--hi:#FFF3C4;--sh:0 1px 2px rgba(23,32,51,.06)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141A22;--paper:#1C2430;--ink:#E9EDF2;--ink2:#B7C0CC;--ink3:#8A96A5;--rule:#3A4656;--soft:#2A3442;--con:#E0A94A;--conbg:#3A2E16;--cons:#5CC1BB;--consbg:#173534;--new:#A99BE0;--newbg:#2E2A45;--flag:#E07A6A;--flagbg:#3D2320;--ok:#A9C48F;--okbg:#25301E;--hi:#4A3F14;--sh:0 1px 2px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#141A22;--paper:#1C2430;--ink:#E9EDF2;--ink2:#B7C0CC;--ink3:#8A96A5;--rule:#3A4656;--soft:#2A3442;--con:#E0A94A;--conbg:#3A2E16;--cons:#5CC1BB;--consbg:#173534;--new:#A99BE0;--newbg:#2E2A45;--flag:#E07A6A;--flagbg:#3D2320;--ok:#A9C48F;--okbg:#25301E;--hi:#4A3F14;--sh:0 1px 2px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Segoe UI",Helvetica,Arial,sans-serif;font-size:13.5px;line-height:1.45}
+h1,h2,h3{font-family:"Archivo","Arial Narrow",Arial,sans-serif;margin:0;text-wrap:balance}
+h1{font-size:26px;font-weight:800;font-variation-settings:"wdth" 82;letter-spacing:-.01em;line-height:1.05}
+h2{font-size:17px;font-weight:700;font-variation-settings:"wdth" 85;margin:0 0 10px}
+h3{font-size:14px;font-weight:700;margin:0 0 6px}
+.mono{font-family:"IBM Plex Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 24px 60px}
+header{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between;padding-bottom:12px;border-bottom:1px solid var(--rule)}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3)}
+.lede{color:var(--ink2);max-width:70ch;margin:6px 0 0}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 18px}
+nav.tabs button{font:inherit;font-weight:600;padding:8px 14px;background:var(--paper);color:var(--ink2);border:1px solid var(--rule);cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+nav.tabs button:focus-visible{outline:2px solid var(--cons);outline-offset:2px}
+section.view[hidden]{display:none}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink2);margin:0 0 12px}
+.chip{display:inline-block;font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:1px 6px;margin-right:4px;background:var(--soft);color:var(--ink3);border-radius:2px;white-space:nowrap}
+.chip.con{background:var(--conbg);color:var(--con)}.chip.cons{background:var(--consbg);color:var(--cons)}.chip.new{background:var(--newbg);color:var(--new)}.chip.flag{background:var(--flagbg);color:var(--flag)}.chip.ok{background:var(--okbg);color:var(--ok)}
+.chip.built{background:var(--okbg);color:var(--ok)}.chip.verified{background:var(--consbg);color:var(--cons)}.chip.proposed{background:var(--soft);color:var(--ink3)}
+a.jump{color:var(--cons);text-decoration:none;border-bottom:1px dotted var(--cons);cursor:pointer;font-family:"IBM Plex Mono",monospace;font-size:12px}
+a.jump:hover{border-bottom-style:solid}
+.hl{background:var(--hi)!important;transition:background .6s}
+/* product tree */
+.tree{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:12px}
+details.area{background:var(--paper);border:1px solid var(--soft);border-top:3px solid var(--con);box-shadow:var(--sh);padding:0}
+details.area>summary{list-style:none;cursor:pointer;padding:10px 14px;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+details.area>summary::-webkit-details-marker{display:none}
+details.area>summary .n{font-family:"Archivo",sans-serif;font-weight:800;font-size:15px}
+details.area>summary .c{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink3)}
+.cap{border-top:1px solid var(--soft);padding:9px 14px 10px;display:flex;flex-direction:column;gap:4px}
+.cap .t{font-weight:600}
+.cap .kv{display:grid;grid-template-columns:78px 1fr;gap:2px 8px;font-size:12px;color:var(--ink2)}
+.cap .kv b{font-weight:500;color:var(--ink3);font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase}
+.cross{margin-top:16px;background:var(--paper);border:1px solid var(--soft);border-top:3px solid var(--cons);padding:12px 14px;box-shadow:var(--sh)}
+.cross table{width:100%;border-collapse:collapse;font-size:12.5px}
+.cross td,.cross th{padding:5px 8px;border-top:1px solid var(--soft);text-align:left;vertical-align:top}
+.cross th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:0}
+/* flow */
+.flowwrap{position:relative;overflow-x:auto;background:var(--paper);border:1px solid var(--soft);box-shadow:var(--sh);padding:14px}
+.lanes{position:relative;display:grid;grid-template-columns:repeat(5,minmax(200px,1fr));gap:14px;min-width:1120px}
+.lane{display:flex;flex-direction:column;gap:10px}
+.lane h3{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--rule);padding-bottom:4px}
+.node{background:var(--bg);border:1px solid var(--rule);padding:8px 10px;position:relative;font-size:12px;cursor:pointer}
+.node .id{font-family:"IBM Plex Mono",monospace;font-size:11.5px;font-weight:500;color:var(--ink)}
+.node .d{color:var(--ink2);margin-top:2px}
+.node .s{margin-top:4px}
+.node.i{border-left:3px solid var(--new)}.node.p{border-left:3px solid var(--con)}.node.v{border-left:3px solid var(--cons)}.node.r{border-left:3px solid var(--flag)}
+svg.edges{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+svg.edges path{fill:none;stroke:var(--ink3);stroke-width:1.4}
+svg.edges path.pick{stroke:var(--cons);stroke-width:2.2}
+.rules{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.rule{background:var(--paper);border:1px solid var(--soft);border-left:3px solid var(--flag);padding:10px 12px;font-size:12.5px;color:var(--ink2)}
+.rule b{display:block;color:var(--ink);font-family:"Archivo",sans-serif;font-size:13px;margin-bottom:3px}
+/* roadmap */
+table.road{width:100%;border-collapse:collapse;background:var(--paper);border:1px solid var(--soft);box-shadow:var(--sh);font-size:12.5px}
+table.road th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);text-align:left;padding:7px 8px;background:var(--soft)}
+table.road td{padding:7px 8px;border-top:1px solid var(--soft);vertical-align:top}
+table.road tr.inc td{background:var(--ink);color:var(--bg);font-family:"Archivo",sans-serif;font-weight:700;font-size:13.5px}
+table.road td.id{font-family:"Archivo",sans-serif;font-weight:800;font-size:15px;white-space:nowrap}
+table.road td.num{font-family:"IBM Plex Mono",monospace;text-align:right;white-space:nowrap}
+.tblwrap{overflow-x:auto}
+/* estimates */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.card{background:var(--paper);border:1px solid var(--soft);padding:12px 14px;box-shadow:var(--sh)}
+.card table{width:100%;border-collapse:collapse;font-size:12.5px}
+.card td,.card th{padding:5px 6px;border-top:1px solid var(--soft);text-align:left}
+.card th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);border-top:0}
+.card td.num,.card th.num{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+.card tr.tot td{font-weight:600;background:var(--soft)}
+input[type=number],select{font:inherit;font-family:"IBM Plex Mono",monospace;font-size:12px;width:90px;padding:3px 5px;border:1px solid var(--rule);background:var(--bg);color:var(--ink)}
+select{width:auto}
+.seg{display:inline-flex;border:1px solid var(--rule)}
+.seg button{font:inherit;font-size:12px;padding:4px 10px;background:var(--paper);color:var(--ink2);border:0;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.note{font-size:12px;color:var(--ink2);margin-top:8px}
+.warn{border-left:3px solid var(--flag);padding-left:10px}
+button.act{font:inherit;font-weight:600;padding:7px 12px;background:var(--cons);color:#fff;border:0;cursor:pointer}
+button.act[disabled]{opacity:.5;cursor:default}
+footer{margin-top:28px;font-size:11.5px;color:var(--ink3);border-top:1px solid var(--soft);padding-top:10px;font-family:"IBM Plex Mono",monospace}
+@media (prefers-reduced-motion:reduce){.hl{transition:none}}
+</style>
+
+<div class="wrap">
+<header>
+  <div>
+    <div class="eyebrow">Tony Project - Commercial Workbench - product and delivery map - 09-Sep-2026</div>
+    <h1>What will exist, how it connects, and how it gets built</h1>
+    <p class="lede">Three linked views. Every stage number is from docs/STAGES.md as re-cut on 09-Sep-2026; every record name from DISC_03; every hour and token from DISC_05. Nothing in code exists yet: the only BUILT items are the discovery documents.</p>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+    <div class="legend"><span><span class="chip proposed">Proposed</span>planned, not started</span><span><span class="chip built">Built</span>exists on the branch</span><span><span class="chip verified">Verified</span>reviewed by Codex or proven by a test</span></div>
+    <div><button class="act" id="dl" hidden>Download standalone copy</button><span id="dlnote" class="note" style="margin:0">Standalone copy: cw/docs/maps/tony_project_map.html on the branch.</span></div>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-view="product">1 Product</button>
+  <button role="tab" aria-selected="false" data-view="flow">2 Data flow</button>
+  <button role="tab" aria-selected="false" data-view="road">3 Build roadmap</button>
+  <button role="tab" aria-selected="false" data-view="est">Estimates</button>
+  <button role="tab" aria-selected="false" data-view="ledger">Usage ledger</button>
+  <button role="tab" aria-selected="false" data-view="gov">Governance</button>
+</nav>
+
+<!-- ============ VIEW 1 PRODUCT ============ -->
+<section class="view" id="v-product">
+  <div class="legend"><span><span class="chip con">Contractor</span>contractor face</span><span><span class="chip cons">Consultant</span>consultant face</span><span><span class="chip new">New</span>added by D-15</span><span>Click a stage to open it on the roadmap; click a record to find it in the data flow.</span></div>
+  <div class="tree" id="tree"></div>
+  <div class="cross">
+    <h2>Cross-cutting: what every capability relies on</h2>
+    <div class="tblwrap"><table id="crosstab"></table></div>
+  </div>
+</section>
+
+<!-- ============ VIEW 2 DATA FLOW ============ -->
+<section class="view" id="v-flow" hidden>
+  <div class="legend"><span>One anonymised joinery item, a bespoke reception desk on sample scheme <span class="mono">GEM-001</span>, followed from estimate to cash forecast. Identifiers are the sample convention, not Tony's data.</span></div>
+  <div class="legend"><span><span class="chip new">Identity</span>ids and revisions</span><span><span class="chip con">Procure and make</span></span><span><span class="chip cons">Income</span></span><span><span class="chip flag">Cost and reports</span></span><span>Click a node to highlight its connections.</span></div>
+  <div class="flowwrap"><div class="lanes" id="lanes"></div><svg class="edges" id="edges"></svg></div>
+  <div class="rules" id="rules"></div>
+</section>
+
+<!-- ============ VIEW 3 ROADMAP ============ -->
+<section class="view" id="v-road" hidden>
+  <div class="legend"><span>31 stages in 9 increments. A = agent active hours, H = human review and QA hours, base case. Demo = needed for the thin demonstration on one anonymised scheme; Full = the depth beyond it.</span></div>
+  <div class="tblwrap"><table class="road" id="roadtab"></table></div>
+</section>
+
+<!-- ============ ESTIMATES ============ -->
+<section class="view" id="v-est" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Effort by increment (hours)</h2>
+      <table id="efftab"></table>
+      <p class="note">Basis: a build stage is 1.5 to 3.5 agent hours and 1 to 2.5 human hours; a docs-only stage about half. Plus or minus 35 percent until the ledger has two increments in it. The 08-Sep-2026 figure of 231 to 320 hours is withdrawn: it blended human and Claude time for a different scope and a chat-based way of working.</p>
+    </div>
+    <div class="card">
+      <h2>Calendar scenarios</h2>
+      <div style="margin-bottom:8px">Combined human hours per week: <span class="seg"><button aria-pressed="true" data-hpw="8">8</button><button aria-pressed="false" data-hpw="20">20</button></span> <span class="note" style="margin:0 0 0 8px">supervision assumed at 0.3 human hours per agent hour</span></div>
+      <table id="caltab"></table>
+      <p class="note">Waits assumed: Mo's signature before S00 (0 to 2 weeks); the Tony call before S10 (1 to 3 weeks, in parallel with Increments 1 to 3); a hosting account before S24 (1 week); accounts export and real files for full depth (unknown).</p>
+    </div>
+    <div class="card">
+      <h2>Token estimate: assumptions per stage session</h2>
+      <table id="asstab"></table>
+      <p class="note">Sessions = 31 stages times a retry factor (1.0 / 1.3 / 1.8). Cache reads = turns times cached context. Context window occupancy is not billed; account-wide percentages are not this project's consumption.</p>
+    </div>
+    <div class="card">
+      <h2>Token totals and API-equivalent cost</h2>
+      <div style="margin-bottom:8px">Rates for <select id="model"></select> <span class="note" style="margin:0 0 0 8px">USD per million tokens, editable</span></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;font-size:11.5px" id="rates"></div>
+      <table id="toktab"></table>
+      <p class="note" id="ratenote"></p>
+      <p class="note warn"><b>What is actually paid:</b> a Claude Max subscription. No per-token bill; consumption shows as the plan's usage meter over its rolling windows, and the official guidance (support.claude.com article 11145838, cited by Codex; blocked from this session so not read here) says limits are shared across Claude and Claude Code. The API-equivalent row above is a scale, not a subscription bill. No extra usage, model change or purchased capacity is assumed. <b>Codex management overhead</b> is a separate provider and meter: about <input type="number" id="codexn" value="40" min="0"> reviews at an unknown cost each; not in the figures above.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEDGER ============ -->
+<section class="view" id="v-ledger" hidden>
+  <div class="card">
+    <h2>Usage ledger (calibration record)</h2>
+    <div class="tblwrap"><table id="ledtab"></table></div>
+    <p class="note">One row per stage session. Observed figures only; where the session surface shows nothing, the cell says "not shown". After S00 to S06 close, DISC_05 sections 2 to 5 are re-issued as v1 with measured ratios. The file of record is docs/discovery/DISC_05 section 6.</p>
+  </div>
+</section>
+
+<!-- ============ GOVERNANCE ============ -->
+<section class="view" id="v-gov" hidden>
+  <div class="grid2">
+    <div class="card">
+      <h2>Status of everything on this map</h2>
+      <table>
+        <tr><th>Item</th><th>Status</th><th>Evidence</th></tr>
+        <tr><td>DISC_01 source mapping</td><td><span class="chip built">Built</span><span class="chip verified">Verified</span></td><td>Codex review 09-Sep-2026 with three corrections, applied</td></tr>
+        <tr><td>DISC_02 coverage matrix</td><td><span class="chip built">Built</span></td><td>on the branch; awaiting review</td></tr>
+        <tr><td>DISC_03 record model</td><td><span class="chip built">Built</span></td><td>on the branch; walk-through review is S01</td></tr>
+        <tr><td>DISC_04 increments</td><td><span class="chip built">Built</span></td><td>corrected after review; STAGES.md re-cut from it</td></tr>
+        <tr><td>DISC_05 estimates and ledger</td><td><span class="chip built">Built</span></td><td>uncalibrated; ledger empty of stage rows</td></tr>
+        <tr><td>WP-01 S00 package</td><td><span class="chip built">Built</span></td><td>ready for Codex review</td></tr>
+        <tr><td>S00 to S30 code</td><td><span class="chip proposed">Proposed</span></td><td>no code exists</td></tr>
+        <tr><td>This map</td><td><span class="chip built">Built</span></td><td>totals computed from one data object; self-checked on load (see footer)</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>What still blocks what (register text read exactly)</h2>
+      <table>
+        <tr><th>Item</th><th>Blocks now</th><th>Does not block</th></tr>
+        <tr><td><b>D-06</b> WTP contract IP, outside-work and data clauses</td><td>S28 live consultant use; D-12 legal vehicle</td><td>building on fixtures (S00 to S27)</td></tr>
+        <tr><td><b>D-07</b> Mo's ownership, hours and split in writing</td><td>D-12; external release or pilot (S25 onward)</td><td>fixture-based building</td></tr>
+        <tr><td><b>W-10</b> two reviews before a session opens</td><td>nothing: Codex review is the second review, recorded on each stage file</td><td>Mo's signature line stays blank until Mo signs; never written by anyone else</td></tr>
+        <tr><td><b>W-13</b> bounded execution exception (09-Sep-2026)</td><td>permits synthetic-data contractor development with Codex review</td><td>asserts no employer clearance (D-06 open), decides no ownership split (D-07 open), signs nothing for Mo; live employer use, live Gamma data and commercial agreements stay unresolved</td></tr>
+        <tr><td><b>D-02</b> Gamma terms, the Tony call</td><td>S10 site flow specification</td><td>Increments 1 to 3</td></tr>
+        <tr><td><b>Q1</b> accounts export format</td><td>S21 real-data gate</td><td>S21 fixture gate</td></tr>
+        <tr><td><b>Q3</b> scheme code format, display name</td><td>S04 settings default (GEM-### assumed, GEMMA assumed)</td><td>anything else</td></tr>
+      </table>
+      <p class="note">Alaa authorised incremental building under Codex management on 09-Sep-2026. Routine plan approvals are recorded as that instruction. Nobody invites people, publishes live data or signs for Mo.</p>
+    </div>
+    <div class="card">
+      <h2>Operations built into the plan</h2>
+      <table>
+        <tr><th>Concern</th><th>Where</th></tr>
+        <tr><td>Roles and access: owner, editor, viewer, site; company and scheme membership; check on every view</td><td>S03; evidence read restricted S24</td></tr>
+        <tr><td>Audit and revisions: history on every table; scheme revisions; superseded rows read-only</td><td>S02, S04</td></tr>
+        <tr><td>Migration and import validation: two-engine test matrix; model constraints; dump-load comparison; imports mapped once with source file, tab, row</td><td>S02, S04, S21, S24</td></tr>
+        <tr><td>Backup and restore: nightly backup, restore on a second machine as a test</td><td>S24</td></tr>
+        <tr><td>Cloud evidence: versioned files with hash, role-restricted read, recoverable</td><td>S11, S24</td></tr>
+        <tr><td>Operational support: run-book, guides per role, support routine, onboarding, deletion</td><td>S25, S26</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+<footer id="foot">Self-check pending.</footer>
+</div>
+
+<script>
+/* ---------- ONE DATA OBJECT: every number on this page is computed from it ---------- */
+const INC = [
+ {n:1,name:"Spine and scheme register",stages:["S00","S01","S02","S03","S04"],a:[8,11,15],h:[6,8,12],u:"first two stages calibrate everything"},
+ {n:2,name:"Estimating and rates",stages:["S05","S06"],a:[3,4,6],h:[2,3,5],u:"specification key design"},
+ {n:3,name:"Procurement",stages:["S07","S08","S09"],a:[5,7,10],h:[4,5,8],u:"RFQ document layout"},
+ {n:4,name:"Manufacture and site evidence",stages:["S10","S11","S12","S13"],a:[8,11,15],h:[6,9,13],u:"PWA offline; site-user feedback needs the Tony call"},
+ {n:5,name:"Variations",stages:["S14","S15","S16"],a:[5,7,10],h:[4,5,8],u:"provisional sum rules"},
+ {n:6,name:"Applications",stages:["S17","S18","S19"],a:[6,8,11],h:[4,6,9],u:"F4-derived layout export"},
+ {n:7,name:"Cost ledger, periods and reports",stages:["S20","S21","S22","S23"],a:[8,11,15],h:[6,8,12],u:"double-counting rules; snapshots"},
+ {n:8,name:"Multi-user and hosting",stages:["S24","S25","S26"],a:[5,7,10],h:[5,7,10],u:"hosting and restore are hands-on"},
+ {n:9,name:"Consultant face",stages:["S27","S28","S29","S30"],a:[7,9,12],h:[5,7,10],u:"D-06 for live use"}
+];
+const FULLDEPTH={a:[10,15,25],h:[10,15,25]};
+const STAGES = {
+ S00:{inc:1,t:"Repository bootstrap; test settings for SQLite and PostgreSQL",dep:"-",proof:"pytest and manage.py check green; tag S00-done",demo:"Demo",a:2,h:1.5,st:"proposed"},
+ S01:{inc:1,t:"Spine walk-through part 1 (docs): DISC_03 sections 1, 2, 9",dep:"S00",proof:"Alaa signs; Codex reviews",demo:"Demo",a:1.5,h:2,st:"proposed"},
+ S02:{inc:1,t:"Walk-through part 2, then every model, migration, admin, history; constraints in models; two-engine migrations",dep:"S01",proof:"both engines migrate; every table in admin; change in history; raw-SQL grep passes",demo:"Demo",a:3,h:2,st:"proposed"},
+ S03:{inc:1,t:"Login, roles, company and scheme membership, permission check on every view",dep:"S02",proof:"two users see different rows; cross-company refused; site role cannot open office screens",demo:"Demo",a:2.5,h:1.5,st:"proposed"},
+ S04:{inc:1,t:"Scheme register, revisions, cost codes, programme activities, BOQ import, allocations; dump-load rehearsal",dep:"S03",proof:"fixture bill imports; shares sum to 100; superseded revision read-only; dump-load compare passes",demo:"Demo",a:2,h:1,st:"proposed"},
+ S05:{inc:2,t:"Rate rules specification (docs)",dep:"S04",proof:"Codex reviews",demo:"Demo",a:1,h:1,st:"proposed"},
+ S06:{inc:2,t:"estimate, estimate_item, rate_record, inclusion; import; benchmark query",dep:"S05",proof:"fixture estimate loads; tendered and quoted side by side; non-comparable excluded",demo:"Demo; Full = history import of real quotation files",a:3,h:2,st:"proposed"},
+ S07:{inc:3,t:"Supplier directory; packages with budgets",dep:"S04",proof:"package carries fixture budget; supplier has four attributes",demo:"Demo; Full = populated directory",a:2,h:1.5,st:"proposed"},
+ S08:{inc:3,t:"RFQ draft and export; quotes; like-for-like comparison",dep:"S07",proof:"RFQ exports, nothing sent; two quotes compare; quoted rate_record created",demo:"Demo",a:3,h:2,st:"proposed"},
+ S09:{inc:3,t:"Commitments with lines; ordered rate_records",dep:"S08",proof:"selecting a quote creates a commitment; ledger shows committed, zero cost",demo:"Demo",a:2,h:1.5,st:"proposed"},
+ S10:{inc:4,t:"Site flow specification (docs): readings, verification, inspection states, evidence checks, acceptance never deemed",dep:"S04; D-02 LOCKED",proof:"Tony's site user and QS agree; Codex reviews",demo:"Demo",a:1.5,h:2,st:"proposed"},
+ S11:{inc:4,t:"Phone PWA progress_record with photos and six links; evidence with version and hash; offline queue",dep:"S10",proof:"record with two photos created from a phone browser against all six links",demo:"Demo; Full = offline queue hardening",a:3.5,h:2.5,st:"proposed"},
+ S12:{inc:4,t:"measured_progress derivation and verification; inspection_request five states; configurable evidence_checks; defect; acceptance never deemed",dep:"S11",proof:"records for one item and location supersede, never add; cumulative never exceeds item quantity; state path with actor and time; acceptance refused without a client act; rejection opens a defect",demo:"Demo",a:3,h:2.5,st:"proposed"},
+ S13:{inc:4,t:"manufacture_item, estimate, actual, variance; overhead allocation setting",dep:"S04",proof:"a doorset and a non-doorset item each carry estimate, actual, explained variance",demo:"Demo",a:3,h:2,st:"proposed"},
+ S14:{inc:5,t:"instruction; variation with scheme-linked code; substantiation",dep:"S12",proof:"code = scheme code + sequence; no instruction shows as claimed; substantiation lists evidence",demo:"Demo",a:2.5,h:2,st:"proposed"},
+ S15:{inc:5,t:"variation_line (selling) and variation_cost_budget (internal, cost heads only) kept apart; four independent VO axes; PS drawdown; early warning",dep:"S14, S06",proof:"instruction, commercial, valuation, site completion move independently; work before price agreement visible; cost budget seeded without OH and profit, enters ledger once; PS and replacement never both carry value",demo:"Demo",a:2.5,h:1.5,st:"proposed"},
+ S16:{inc:5,t:"VO statuses; notice export; ageing alarm",dep:"S15",proof:"status flow enforced; export byte-identical; alarm fires",demo:"Demo",a:2,h:1.5,st:"proposed"},
+ S17:{inc:6,t:"application and lines: previous, current, cumulative; line starts from measured_progress; evidence checks per line; QS override with reason; VO account in",dep:"S12, S16",proof:"blocking check stops the claim unless an override with reason is recorded; warnings show; acceptance never deemed; prev + current = cumulative",demo:"Demo",a:3,h:2,st:"proposed"},
+ S18:{inc:6,t:"deductions from contract_terms; certificate and receipt separate",dep:"S17",proof:"deductions as rows; certified and received separate; differences show",demo:"Demo",a:2.5,h:2,st:"proposed"},
+ S19:{inc:6,t:"Application export in F4-derived layout",dep:"S18",proof:"matches layout; byte-identical re-run",demo:"Demo; Full = Gamma's live layout mapped",a:2.5,h:2,st:"proposed"},
+ S20:{inc:7,t:"Cost rules specification (docs): authority and reconciliation rules; accounts export format",dep:"S09; Q1",proof:"Codex reviews; format named or fixture declared",demo:"Demo",a:1.5,h:1.5,st:"proposed"},
+ S21:{inc:7,t:"cost_budget, accrual, cost_actual import (the authority), cash_paid, invoice match as link not addition, credits, allocations; actual rate_records",dep:"S20, S09",proof:"ledger v invoice, partial accrual reversal, partial payment and receipt, credit and allocation rules each fail then pass; re-import shows old and new",demo:"Demo; Full = real accounts export",a:3.5,h:2.5,st:"proposed"},
+ S22:{inc:7,t:"period, period_snapshot, forecast, risk register",dep:"S21",proof:"closing writes a snapshot; later change does not alter it; stale forecast alarm",demo:"Demo",a:3,h:2,st:"proposed"},
+ S23:{inc:7,t:"CVR (F3 heads, Template 2 reconciliation); cash-flow forecast; demo end to end",dep:"S22, S19",proof:"CVR reconciles to S19 and the ledger; cash forecast reconciles; demo passes",demo:"Demo",a:3,h:2,st:"proposed"},
+ S24:{inc:8,t:"PostgreSQL cut-over with dump-load comparison; HTTPS; backup and restore; role-restricted evidence",dep:"S23; hosting account",proof:"restore on a second machine; cross-company evidence refused; counts and checksums match",demo:"Full",a:3,h:3,st:"proposed"},
+ S25:{inc:8,t:"Onboarding, plans, export and deletion, terms of service, security review",dep:"S24; D-10",proof:"second company in ten minutes, isolated; deletion proven",demo:"Full",a:2.5,h:2.5,st:"proposed"},
+ S26:{inc:8,t:"Guides per role, admin guide, support routine, run-book",dep:"S25",proof:"a person not on the build follows the run-book to a running system",demo:"Full",a:1.5,h:1.5,st:"proposed"},
+ S27:{inc:9,t:"Consultant intake of any layout; line checks; evidence check",dep:"S19",proof:"fixture and consultant-style application load; checks fire",demo:"Full",a:2.5,h:2,st:"proposed"},
+ S28:{inc:9,t:"Assessed and certified values; certificate export; tracker",dep:"S27; D-06 for live use",proof:"certificate matches a hand-prepared one",demo:"Full",a:2.5,h:2,st:"proposed"},
+ S29:{inc:9,t:"Variation assessment",dep:"S16, S27",proof:"fixture variation assessed; alarm fires",demo:"Full",a:2,h:1.5,st:"proposed"},
+ S30:{inc:9,t:"Consultant cost report to the Employer",dep:"S23, S28",proof:"matches a manual report on the fixture set",demo:"Full",a:2,h:1.5,st:"proposed"}
+};
+const TOK = {
+ turns:[25,40,60], ctx:[60000,100000,150000], fresh:[40000,60000,80000], writes:[70000,120000,180000], out:[15000,25000,40000], retry:[1.0,1.3,1.8], stages:31
+};
+const RATES = { // USD per MTok, verified 09-Sep-2026 on platform.claude.com/docs/en/about-claude/pricing
+ "Claude Fable 5.1":{inp:10,cw:12.5,cr:0.25,out:50},
+ "Claude Opus 5":{inp:5,cw:6.25,cr:0.5,out:25},
+ "Claude Sonnet 5":{inp:2,cw:2.5,cr:0.2,out:10},
+ "Unknown (enter)":{inp:0,cw:0,cr:0,out:0}
+};
+const AREAS = [
+ {n:"1 Estimating history and rate build-ups",caps:[
+  {t:"Import estimate items and rate build-ups per scheme",face:"con",users:"Estimator, QS",act:"map a quotation extract once; import",inp:"F5 Quotation heads, Data Library rows, Tender Log revisions",out:"estimate, estimate_item, rate_record rows with source",src:"F5 Quotation, Data Library, Tender Log",stage:"S06",rec:["estimate","rate_record","scheme_revision"],new:1},
+  {t:"Rate records with nine attributes and four types",face:"con",users:"QS",act:"never edit; create on quote, tender, order, actual",inp:"quote lines, commitments, actuals",out:"quoted / tendered / ordered / actual rates",src:"F5 DPM Data Library captions",stage:"S06",rec:["rate_record"],new:1},
+  {t:"Non-comparable flag and benchmark query",face:"con",users:"Estimator",act:"pick a specification key; compare across schemes",inp:"rate_record",out:"side-by-side rates; excluded rows shown",src:"-",stage:"S06",rec:["rate_record"],new:1},
+  {t:"Inclusions and exclusions on an estimate",face:"con",users:"Estimator",act:"record terms, attendances, prelims basis",inp:"F5 Letter terms, Attendances, Prelim Breakdown",out:"inclusion rows; contract_terms defaults",src:"F5 Letter, Attendances, Prelim Breakdown",stage:"S06",rec:["inclusion","contract_terms"]}]},
+ {n:"2 Scheme register, items, cost codes, WBS",caps:[
+  {t:"Scheme with a stable code and revisions",face:"both",users:"QS, PM",act:"create scheme; add tender, baseline, change revisions",inp:"F5 Handover header",out:"scheme, scheme_revision",src:"F5 Handover and Budgets rows 9 to 23; F5 Tender Log",stage:"S04",rec:["scheme","scheme_revision"]},
+  {t:"BOQ items imported once, with cost codes",face:"both",users:"QS",act:"map the bill layout once; import",inp:"F4 Cumulative rows 8 to 272",out:"boq_item rows; cost_code chart",src:"F4 Cumulative; F3 PP Template row 8",stage:"S04",rec:["boq_item","cost_code"]},
+  {t:"Programme activities and explicit allocations",face:"con",users:"PM, QS",act:"type or import activities; allocate items to codes and activities",inp:"CSV or typed",out:"programme_activity, allocation (shares sum to 100)",src:"none in files (Q2)",stage:"S04",rec:["programme_activity","allocation"],new:1},
+  {t:"Contract terms as settings",face:"both",users:"QS",act:"enter retention, payment days, MCD, discount with clause refs",inp:"F5 Letter terms; CVR template rows 41 to 48",out:"contract_terms",src:"F3 CVR template; F5 Letter",stage:"S04",rec:["contract_terms"]}]},
+ {n:"3 Budgets, commitments, accruals, actuals, cash; reports",caps:[
+  {t:"Budgets by cost head including prelims",face:"con",users:"QS",act:"load handover budgets per head",inp:"F5 Handover rows 51 to 104",out:"cost_budget",src:"F5 Handover and Budgets; F3 CVR template",stage:"S21",rec:["cost_budget"]},
+  {t:"Commitments, accruals, ledger actuals (the authority), invoices as links, cash paid, kept apart",face:"con",users:"QS, accounts",act:"import the accounts export mapped once; accrue; match invoices to ledger rows; record credits and allocations",inp:"commitments, supplier invoices, accounts export (Q1)",out:"accrual, cost_actual, cash_paid, invoice_match; an invoice never adds to a matched ledger row",src:"F3 Template 2 cost lines; external links only",stage:"S21",rec:["accrual","cost_actual","cash_paid","supplier_invoice"],new:1},
+  {t:"Income kept apart: applied, certified, received",face:"con",users:"QS",act:"enter certificate and receipt as separate rows",inp:"certificate, receipt",out:"three figures, never one field",src:"F4 Cumulative rows 273 to 284",stage:"S18",rec:["certificate","receipt"]},
+  {t:"Period close and snapshot",face:"con",users:"QS",act:"close a period; reports read the snapshot",inp:"all ledgers",out:"period_snapshot",src:"-",stage:"S22",rec:["period","period_snapshot"],new:1},
+  {t:"CVR and internal cost report",face:"con",users:"QS, director",act:"generate; every figure shows its source",inp:"snapshot",out:"CVR export (F3 heads, Template 2 reconciliation)",src:"F3 CVR template; Template 2; 1 2026 PP",stage:"S23",rec:["period_snapshot","forecast"]},
+  {t:"Cash-flow forecast with VOs, provisional sums, risks, early warnings",face:"both",users:"QS, director",act:"forecast per scheme; roll up",inp:"applications, receipts, commitments, terms, risk, early_warning",out:"cash forecast; risk register; EWN record",src:"F3 2A and 2b (dead); F4 EWN",stage:"S23",rec:["forecast","risk","early_warning","provisional_sum"],new:1},
+  {t:"No double counting: authority and reconciliation rules",face:"con",users:"system",act:"model-level rules, each a test: ledger v invoice, partial accrual reversal, partial payment and receipt, credit, allocation, provisional sum, snapshot",inp:"ledgers",out:"refused writes; netted reports",src:"-",stage:"S21",rec:["accrual","commitment","provisional_sum"],new:1}]},
+ {n:"4 Applications and variation accounts",caps:[
+  {t:"Cumulative application: measured progress, evidence checks, QS decision",face:"con",users:"QS",act:"line starts from measured_progress; each evidence check shown; block or warn; QS override with a reason; previous, current, cumulative on every line",inp:"measured_progress, evidence_check results, inspection_request states, boq_item, variation",out:"application, application_line with basis and override",src:"F4 Cumulative; door and screen schedules",stage:"S17",rec:["application","application_line"]},
+  {t:"Deductions configurable: retention, MCD, rebate, discount, contra",face:"con",users:"QS",act:"computed from contract_terms; shown as rows",inp:"contract_terms",out:"deduction rows",src:"F3 Template 2 row 18; CVR template rows 46, 47",stage:"S18",rec:["deduction"]},
+  {t:"Application export in the company layout",face:"con",users:"QS",act:"export; byte-identical re-run",inp:"application",out:"F4-derived workbook",src:"F4 all sheets",stage:"S19",rec:["application"]},
+  {t:"Variation with scheme-linked code, instruction, substantiation",face:"con",users:"site, QS",act:"raise; attach instruction; link evidence",inp:"progress_record, instruction, evidence",out:"variation (GEM-001-V007 style), substantiation",src:"F4 VA Summary row 12; F6 flow",stage:"S14",rec:["variation","instruction","substantiation"]},
+  {t:"VO selling build-up and internal cost budget, kept apart",face:"con",users:"QS",act:"price the selling lines with OH and profit; seed a cost budget from cost heads only on instruction or work start; edit it; draw down a PS",inp:"rate_record, boq_item, provisional_sum",out:"variation_line (selling); variation_cost_budget (internal); notice document",src:"F4 VA Breakdown heads",stage:"S15",rec:["variation_line","variation_cost_budget","provisional_sum"],new:1},
+  {t:"Four independent VO axes: instruction, commercial, valuation, site completion",face:"con",users:"QS, site",act:"record each independently; work before price agreement stays visible",inp:"instruction, certificate, receipt, measured_progress",out:"dated states per axis",src:"F4 VA Summary both sides",stage:"S16",rec:["variation","certificate"]}]},
+ {n:"5 In-house joinery manufacture",caps:[
+  {t:"Manufacture item, any joinery: doorset, desk, cladding",face:"con",users:"production, estimator",act:"flag an item as made in-house",inp:"boq_item or variation_line",out:"manufacture_item",src:"F5 Manuf. (Gamyba); DPM optional",stage:"S13",rec:["manufacture_item"],new:1},
+  {t:"Estimate: materials, waste, hours, labour rate, design, sundries, shipping, storage, overhead",face:"con",users:"estimator",act:"enter or import per item",inp:"F4 VA Breakdown AB:AU heads",out:"manufacture_estimate",src:"F4 VA Breakdown; F5 Quotation AN:BV",stage:"S13",rec:["manufacture_estimate"],new:1},
+  {t:"Actual and explained variance",face:"con",users:"production, QS",act:"record actual hours and materials; explain",inp:"timesheets, cost_actual",out:"manufacture_actual, variance",src:"F1 0.4 Manufacturing; F3 3 Manuf PP",stage:"S13",rec:["manufacture_actual","variance"],new:1}]},
+ {n:"6 Suppliers, RFQs, quotes, orders, reconciliation",caps:[
+  {t:"Supplier and subcontractor directory",face:"con",users:"buyer",act:"maintain trade, geography, capability, performance",inp:"typed",out:"supplier",src:"F5 Handover quote columns; F2 Credit Check (customer side)",stage:"S07",rec:["supplier"],new:1},
+  {t:"Package budgets and RFQ drafts, never sent",face:"con",users:"buyer",act:"draft RFQ from package; export document",inp:"package, boq_item",out:"rfq, rfq_line, document",src:"F5 Handover rows 51 to 104",stage:"S08",rec:["package","rfq"],new:1},
+  {t:"Like-for-like quote comparison and selection",face:"con",users:"buyer, QS",act:"enter quotes; compare by item with inclusions; select",inp:"quote_line",out:"comparison; quoted rate_record",src:"F5 Quote 1 / Quote 2 columns",stage:"S08",rec:["quote","quote_line"],new:1},
+  {t:"Purchase orders and subcontracts as commitments",face:"con",users:"buyer",act:"place; lines to items and cost codes",inp:"selected quote",out:"commitment, commitment_line; ordered rate_record",src:"F3 PP planner status key",stage:"S09",rec:["commitment","commitment_line"],new:1},
+  {t:"Delivery and invoice reconciliation",face:"con",users:"buyer, accounts",act:"record deliveries; match invoices; flag unmatched",inp:"delivery, supplier_invoice",out:"invoice_match",src:"-",stage:"S21",rec:["delivery","supplier_invoice","invoice_match"],new:1}]},
+ {n:"7 Phone site progress and quality capture",caps:[
+  {t:"Low-effort phone capture with six links",face:"con",users:"site supervisor",act:"photo, item, location, activity, VO, instruction; submit",inp:"camera, pick lists",out:"progress_record, evidence",src:"F6 steps 3 to 5 (flow only)",stage:"S11",rec:["progress_record","evidence","location"]},
+  {t:"Measured progress and internal verification, separate from inspection",face:"con",users:"site, PM",act:"cumulative reading per item and location; verify by name; later readings supersede, never add",inp:"progress_record",out:"measured_progress, capped at item quantity",src:"F4 schedule claim columns",stage:"S12",rec:["measured_progress","progress_record"],new:1},
+  {t:"Inspection and sign-off with four acceptance states",face:"both",users:"site, PM, client",act:"internal complete; submit; client acknowledges; client accepts or rejects from a recorded act",inp:"progress_record",out:"inspection_request with actor and time per state",src:"none in files",stage:"S12",rec:["inspection_request"],new:1},
+  {t:"Acceptance is never deemed; claimability is a configurable check",face:"con",users:"QS, system",act:"per-scheme evidence_checks (photo, submitted, acknowledged, accepted) block or warn; QS override with a reason",inp:"inspection_request, evidence_check",out:"check results beside each application line",src:"-",stage:"S12",rec:["evidence_check","application_line"],new:1},
+  {t:"Defects and rework",face:"con",users:"site, PM",act:"open on rejection; rework; re-inspect",inp:"inspection_request",out:"defect",src:"none in files",stage:"S12",rec:["defect"],new:1},
+  {t:"Cloud evidence: versions, hash, roles, recoverable",face:"both",users:"everyone",act:"upload; read by role; restore",inp:"files",out:"evidence rows with history",src:"-",stage:"S24",rec:["evidence","sources","history"]}]}
+];
+const CROSS=[
+ ["Roles and access","owner, editor, viewer, site; company and scheme membership; check on every view","S03, S24"],
+ ["Audit and revisions","history on every table; scheme revisions; superseded rows read-only; sources register","S02, S04"],
+ ["Migration and import validation","two-engine test matrix; constraints in models; dump-load comparison; imports mapped once with file, tab, row","S02, S04, S21, S24"],
+ ["Backup and restore","nightly backup; restore on a second machine as a test","S24"],
+ ["Cloud evidence","versioned files with hash; role-restricted read; recoverable","S11, S24"],
+ ["Operational support","run-book, guides per role, support routine, onboarding, deletion","S25, S26"],
+ ["Consultant face","same records from the assessing side; kept, off the Stage 1 critical path","S27 to S30"]
+];
+const FLOW = { lanes:["Identity","Estimate and procure","Make and evidence","Income","Cost and reports"],
+ nodes:[
+  {id:"scheme",lane:0,cls:"i",l:"GEM-001",d:"scheme, stable code; display name GEMMA (Q3)",s:"S04"},
+  {id:"rev",lane:0,cls:"i",l:"R0 tender, R1 baseline, R2 change",d:"scheme_revision; one baseline",s:"S04"},
+  {id:"item",lane:0,cls:"i",l:"BOQ 2.3.014 Reception desk",d:"boq_item on R1; qty and value stored once",s:"S04"},
+  {id:"alloc",lane:0,cls:"i",l:"CC-410 Manufacture 60% / CC-230 Fixing 40% / WBS A-2310",d:"allocation rows; shares sum to 100",s:"S04"},
+  {id:"ps",lane:0,cls:"i",l:"PS-02 provisional sum",d:"boq_item flagged provisional",s:"S04"},
+  {id:"est",lane:1,cls:"p",l:"E-R0 estimate item",d:"build-up by head; overrides flagged",s:"S06"},
+  {id:"rate",lane:1,cls:"p",l:"rate_record: tendered",d:"spec key, date, revision, region, supplier",s:"S06"},
+  {id:"pkg",lane:1,cls:"p",l:"PK-03 package, budget",d:"from handover row",s:"S07"},
+  {id:"rfq",lane:1,cls:"p",l:"RFQ-03 (draft, not sent)",d:"rfq_line for 2.3.014",s:"S08"},
+  {id:"quote",lane:1,cls:"p",l:"Q-03-A, Q-03-B",d:"quote_line -> rate_record quoted",s:"S08"},
+  {id:"po",lane:1,cls:"p",l:"PO-0021 commitment",d:"committed, not cost; rate_record ordered",s:"S09"},
+  {id:"mi",lane:2,cls:"p",l:"MI-014 manufacture item",d:"estimate vs actual by head; variance",s:"S13"},
+  {id:"dn",lane:2,cls:"p",l:"DN-0021-1 delivery",d:"against PO line",s:"S21"},
+  {id:"pr",lane:2,cls:"p",l:"PR-0093 site record + 2 photos",d:"measured 60% at L2-R04; links: scheme, location, item, A-2310, VO, instruction",s:"S11"},
+  {id:"mp",lane:2,cls:"p",l:"measured_progress 2.3.014 @ L2-R04 = 60%",d:"latest verified reading; PR-0101 later reads 80% and supersedes, never adds",s:"S12"},
+  {id:"ir",lane:2,cls:"p",l:"IR-0093 inspection",d:"internal_complete -> submitted -> acknowledged -> accepted only from a client act",s:"S12"},
+  {id:"def",lane:2,cls:"p",l:"DF-0011 defect (if rejected)",d:"rework, re-inspect",s:"S12"},
+  {id:"ins",lane:3,cls:"v",l:"INS-014 instruction",d:"written, dated, evidenced",s:"S14"},
+  {id:"vo",lane:3,cls:"v",l:"GEM-001-V007 variation",d:"selling lines with OH and profit; draws down PS-02; instruction, commercial, valuation, completion tracked apart",s:"S14"},
+  {id:"app",lane:3,cls:"v",l:"AP-006 application",d:"line for 2.3.014 starts at measured 60%; checks: photo ok, inspection submitted (warn); QS claims 60% with basis",s:"S17"},
+  {id:"ded",lane:3,cls:"v",l:"deductions: retention, MCD",d:"from contract_terms",s:"S18"},
+  {id:"cert",lane:3,cls:"v",l:"CE-006 certificate",d:"certified per line; differences",s:"S18"},
+  {id:"rc",lane:3,cls:"v",l:"RC-006 receipt",d:"paid; retention released",s:"S18"},
+  {id:"vcb",lane:4,cls:"r",l:"variation_cost_budget V007",d:"cost heads only, no OH or profit; created on instruction; edited by QS",s:"S15"},
+  {id:"bud",lane:4,cls:"r",l:"cost_budget CC-410, CC-230",d:"baseline from handover; plus variation_cost_budget rows, never selling value",s:"S21"},
+  {id:"acc",lane:4,cls:"r",l:"accrual (PO-0021, Aug)",d:"reversed when invoice matched",s:"S21"},
+  {id:"inv",lane:4,cls:"r",l:"SI-3310 supplier invoice",d:"matched to PO line, DN and the ledger row: same cost, not an addition",s:"S21"},
+  {id:"led",lane:4,cls:"r",l:"cost_actual (ledger import)",d:"the authority for actual cost; invoice links to it",s:"S21"},
+  {id:"cash",lane:4,cls:"r",l:"cash_paid",d:"reduces creditor; never adds cost",s:"S21"},
+  {id:"snap",lane:4,cls:"r",l:"P-2026-08 snapshot",d:"frozen figures with source rows",s:"S22"},
+  {id:"risk",lane:4,cls:"r",l:"risk RK-04, EWN-02",d:"value, likelihood, owner",s:"S22"},
+  {id:"cvr",lane:4,cls:"r",l:"CVR and cost report",d:"value from AP/CE/RC, cost from ledger",s:"S23"},
+  {id:"cf",lane:4,cls:"r",l:"cash forecast",d:"in from AP terms and retention; out from PO terms",s:"S23"}
+ ],
+ edges:[["scheme","rev"],["rev","item"],["item","alloc"],["rev","ps"],["item","est"],["est","rate"],["item","pkg"],["pkg","rfq"],["rfq","quote"],["quote","po"],["quote","rate"],["po","rate"],["po","mi"],["po","dn"],["mi","pr"],["pr","mp"],["pr","ir"],["ir","def"],["pr","vo"],["ins","vo"],["ps","vo"],["mp","app"],["ir","app"],["vo","app"],["app","ded"],["app","cert"],["cert","rc"],["rev","bud"],["vo","vcb"],["vcb","bud"],["po","acc"],["dn","inv"],["inv","led"],["led","acc"],["inv","cash"],["bud","snap"],["acc","snap"],["led","snap"],["cert","snap"],["rc","snap"],["risk","snap"],["snap","cvr"],["snap","cf"],["po","cf"],["app","cf"],["mi","cvr"]]
+};
+const RULES=[
+ ["Ledger row is the authority; the invoice is the same cost","Cost to date for CC-410 = ledger actuals + invoices not yet in the ledger + open accruals, three disjoint sets. SI-3310 matched to its ledger row is one cost, not two. PO-0021 is committed, never cost. A partial invoice reduces the August accrual by the matched amount; a credit note is a negative invoice matched once; an allocation across codes must sum to the document total. cash_paid reduces the creditor and adds nothing."],
+ ["Provisional sum and its replacement","PS-02 carries its allowance until GEM-001-V007 draws it down; then only the VO lines carry value and the report nets PS-02 to zero. A test refuses value on both."],
+ ["Four things, kept apart","Measured progress (PR-0093 reads 60%), internal verification, the inspection cycle (IR-0093) and the QS decision on AP-006 are separate records. The line starts at 60%, shows each configured evidence check as pass, warn or block, and the QS may override a block with a reason kept in history. Acceptance is recorded only from a client act; silence never advances a state."],
+ ["Readings supersede, never add","PR-0093 (60%) and a later PR-0101 (80%) for the same item and location give measured_progress 80%, not 140%; cumulative installed is capped at the item quantity."],
+ ["Selling value and cost budget are not the same number","GEM-001-V007's selling lines carry overhead recovery and profit; its variation_cost_budget is cost heads only, created on instruction so work before price agreement is tracked, and it is the only VO figure in the cost ledger. Instruction, commercial agreement, valuation and site completion move on their own axes."],
+ ["Income is three rows","Applied (AP-006), certified (CE-006), received (RC-006) are separate records with their own dates; the CVR shows all three and the differences."],
+ ["Snapshots do not move","P-2026-08 is written on close and never recalculated; a later correction is a row in P-2026-09 with a reason."],
+ ["Risks live beside the forecast","RK-04 and EWN-02 carry value and likelihood into the cash forecast as their own lines, never folded into a cost head."]
+];
+const LEDGER=[
+ ["09-Sep-2026","Discovery, first package (DISC_01 to DISC_04)","1","about 30","not shown; one review subagent: 62,721 total for 4 tool uses","container counter is a context budget, not billed usage"],
+ ["09-Sep-2026","Discovery, second package (DISC_05, map, STAGES re-cut)","1 (same session)","about 15","not shown","same"],
+ ["","S00","","","","to be filled"],["","S01","","","","to be filled"]
+];
+
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s); const el=(t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!==undefined)e.innerHTML=h; return e;};
+const fmt=n=>n.toLocaleString("en-GB",{maximumFractionDigits:1});
+const fmtM=n=>(n/1e6).toLocaleString("en-GB",{maximumFractionDigits:2})+" M";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function show(view){document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.view===view?"true":"false"));document.querySelectorAll("section.view").forEach(s=>s.hidden=s.id!=="v-"+view);if(view==="flow")setTimeout(drawEdges,30);}
+function flash(id){const e=document.getElementById(id);if(!e)return;e.classList.add("hl");e.scrollIntoView({block:"center"});setTimeout(()=>e.classList.remove("hl"),1800);}
+function stageLink(s){return `<a class="jump" data-stage="${s}">${s}</a>`;}
+function recLink(r){return `<a class="jump" data-rec="${r}">${r}</a>`;}
+document.addEventListener("click",e=>{const a=e.target.closest("a.jump");if(!a)return;e.preventDefault();if(a.dataset.stage){show("road");flash("row-"+a.dataset.stage);}if(a.dataset.rec){show("flow");const n=FLOW.nodes.find(n=>(n.l+" "+n.d).toLowerCase().includes(a.dataset.rec.toLowerCase().replace(/_/g,"_")));if(n){flash("node-"+n.id);pick(n.id);}else{flash("rules");}}});
+document.querySelectorAll("nav.tabs button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.view)));
+
+/* ---------- view 1 ---------- */
+(function(){const tree=$("#tree");AREAS.forEach((ar,i)=>{const d=el("details","area");d.open=true;const total=ar.caps.length,nw=ar.caps.filter(c=>c.new).length;d.innerHTML=`<summary><span class="n">${esc(ar.n)}</span><span class="c">${total} capabilities, ${nw} new</span></summary>`;ar.caps.forEach(c=>{const faces=c.face==="both"?'<span class="chip con">Contractor</span><span class="chip cons">Consultant</span>':c.face==="con"?'<span class="chip con">Contractor</span>':'<span class="chip cons">Consultant</span>';d.appendChild(el("div","cap",`<div class="t">${esc(c.t)} ${c.new?'<span class="chip new">New</span>':''}<span class="chip proposed">Proposed</span></div><div class="kv"><b>users</b><span>${esc(c.users)}</span><b>action</b><span>${esc(c.act)}</span><b>inputs</b><span>${esc(c.inp)}</span><b>outputs</b><span>${esc(c.out)}</span><b>records</b><span>${c.rec.map(recLink).join(", ")}</span><b>source</b><span>${esc(c.src)}</span><b>stage</b><span>${stageLink(c.stage)} ${faces}</span></div>`));});tree.appendChild(d);});
+ const t=$("#crosstab");t.innerHTML="<tr><th>Concern</th><th>How</th><th>Stages</th></tr>"+CROSS.map(r=>`<tr><td><b>${esc(r[0])}</b></td><td>${esc(r[1])}</td><td>${r[2].split(", ").map(x=>x.startsWith("S")&&x.length===3?stageLink(x):esc(x)).join(", ")}</td></tr>`).join("");})();
+
+/* ---------- view 2 ---------- */
+let picked=null;
+function pick(id){picked=picked===id?null:id;drawEdges();}
+(function(){const lanes=$("#lanes");FLOW.lanes.forEach((name,i)=>{const L=el("div","lane",`<h3>${esc(name)}</h3>`);FLOW.nodes.filter(n=>n.lane===i).forEach(n=>{const d=el("div","node "+n.cls,`<div class="id">${esc(n.l)}</div><div class="d">${esc(n.d)}</div><div class="s">${stageLink(n.s)}</div>`);d.id="node-"+n.id;d.addEventListener("click",ev=>{if(ev.target.closest("a.jump"))return;pick(n.id);});L.appendChild(d);});lanes.appendChild(L);});
+ $("#rules").innerHTML=RULES.map(r=>`<div class="rule"><b>${esc(r[0])}</b>${esc(r[1])}</div>`).join("");$("#rules").id="rules";})();
+function drawEdges(){const svg=$("#edges"),wrap=$("#lanes");if(!wrap||wrap.offsetParent===null)return;const R=wrap.getBoundingClientRect();svg.setAttribute("width",wrap.scrollWidth);svg.setAttribute("height",wrap.scrollHeight);svg.style.left=wrap.offsetLeft+"px";svg.style.top=wrap.offsetTop+"px";let out="";FLOW.edges.forEach(([a,b])=>{const A=document.getElementById("node-"+a),B=document.getElementById("node-"+b);if(!A||!B)return;const ra=A.getBoundingClientRect(),rb=B.getBoundingClientRect();let x1,y1,x2,y2;if(Math.abs(ra.left-rb.left)<10){x1=ra.left+12-R.left;y1=ra.bottom-R.top;x2=rb.left+12-R.left;y2=rb.top-R.top;out+=`<path class="${picked===a||picked===b?'pick':''}" d="M${x1},${y1} C${x1},${(y1+y2)/2} ${x2},${(y1+y2)/2} ${x2},${y2}"/>`;}else{const l2r=rb.left>ra.left;x1=(l2r?ra.right:ra.left)-R.left;y1=ra.top+ra.height/2-R.top;x2=(l2r?rb.left:rb.right)-R.left;y2=rb.top+rb.height/2-R.top;const mx=(x1+x2)/2;out+=`<path class="${picked===a||picked===b?'pick':''}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;}});svg.innerHTML=out;}
+window.addEventListener("resize",()=>{if(!$("#v-flow").hidden)drawEdges();});
+
+/* ---------- view 3 ---------- */
+(function(){const t=$("#roadtab");let h="<tr><th>Stage</th><th>Deliverable</th><th>Depends on</th><th>Acceptance proof</th><th>Demo / Full</th><th>A h</th><th>H h</th><th>Status</th></tr>";INC.forEach(inc=>{const sa=inc.stages.reduce((s,k)=>s+STAGES[k].a,0),sh=inc.stages.reduce((s,k)=>s+STAGES[k].h,0);h+=`<tr class="inc"><td colspan="5">Increment ${inc.n} - ${esc(inc.name)} <span style="font-weight:400;font-size:12px;opacity:.85">(${esc(inc.u)})</span></td><td class="num">${fmt(sa)}</td><td class="num">${fmt(sh)}</td><td>base ${inc.a[1]} / ${inc.h[1]} (low ${inc.a[0]} / ${inc.h[0]}, high ${inc.a[2]} / ${inc.h[2]})</td></tr>`;inc.stages.forEach(k=>{const s=STAGES[k];h+=`<tr id="row-${k}"><td class="id">${k}</td><td>${esc(s.t)}</td><td>${s.dep.split(/[,;]\s*/).map(x=>/^S\d\d$/.test(x)?stageLink(x):esc(x)).join(", ")}</td><td>${esc(s.proof)}</td><td>${esc(s.demo)}</td><td class="num">${fmt(s.a)}</td><td class="num">${fmt(s.h)}</td><td><span class="chip ${s.st}">${s.st}</span></td></tr>`;});});const ta=Object.values(STAGES).reduce((s,x)=>s+x.a,0),th=Object.values(STAGES).reduce((s,x)=>s+x.h,0);h+=`<tr class="inc"><td colspan="5">Total, ${Object.keys(STAGES).length} stages (per-stage base sums)</td><td class="num">${fmt(ta)}</td><td class="num">${fmt(th)}</td><td></td></tr>`;t.innerHTML=h;window.__stageTotals={ta,th,n:Object.keys(STAGES).length};})();
+
+/* ---------- estimates ---------- */
+const sum=(arr,i)=>arr.reduce((s,x)=>s+x[i],0);
+(function(){const t=$("#efftab");let h="<tr><th>Increment</th><th class=num>Agent low / base / high</th><th class=num>Human low / base / high</th></tr>";INC.forEach(i=>h+=`<tr><td>${i.n} ${esc(i.name)}</td><td class=num>${i.a.join(" / ")}</td><td class=num>${i.h.join(" / ")}</td></tr>`);const demo=INC.slice(0,7),all=INC;const d=[0,1,2].map(i=>sum(demo.map(x=>x.a),i)),dh=[0,1,2].map(i=>sum(demo.map(x=>x.h),i)),A=[0,1,2].map(i=>sum(all.map(x=>x.a),i)),H=[0,1,2].map(i=>sum(all.map(x=>x.h),i));h+=`<tr class=tot><td>Demo (Inc 1 to 7)</td><td class=num>${d.join(" / ")}</td><td class=num>${dh.join(" / ")}</td></tr><tr class=tot><td>All increments (1 to 9)</td><td class=num>${A.join(" / ")}</td><td class=num>${H.join(" / ")}</td></tr><tr><td>Full depth beyond the demo</td><td class=num>${FULLDEPTH.a.join(" / ")}</td><td class=num>${FULLDEPTH.h.join(" / ")}</td></tr><tr class=tot><td>Full Stage 1</td><td class=num>${A.map((x,i)=>x+FULLDEPTH.a[i]).join(" / ")}</td><td class=num>${H.map((x,i)=>x+FULLDEPTH.h[i]).join(" / ")}</td></tr>`;t.innerHTML=h;window.__eff={d,dh,A,H};})();
+let hpw=8;
+function calendar(){const {d,dh,A,H}=window.__eff;const att=(hh,aa)=>hh+0.3*aa;const rows=[["Demo (Inc 1 to 7)",att(dh[1],d[1]),[0.5,2.5]],["All increments",att(H[1],A[1]),[1.5,4]],["Full Stage 1",att(H[1]+FULLDEPTH.h[1],A[1]+FULLDEPTH.a[1]),[1.5,5]]];const t=$("#caltab");let h=`<tr><th>Milestone</th><th class=num>Attended hours (base)</th><th class=num>Weeks at ${hpw} h/wk</th><th class=num>With waits</th><th>Lands from 15-Sep-2026</th></tr>`;rows.forEach(r=>{const w=r[1]/hpw;const lo=w+r[2][0],hi=w*1.15+r[2][1];const land=wk=>{const dt=new Date(2026,8,15);dt.setDate(dt.getDate()+Math.round(wk*7));return dt.toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"});};h+=`<tr><td>${r[0]}</td><td class=num>${fmt(r[1])}</td><td class=num>${fmt(w)}</td><td class=num>${fmt(lo)} to ${fmt(hi)}</td><td>${land(lo)} to ${land(hi)}</td></tr>`;});t.innerHTML=h;}
+document.querySelectorAll("[data-hpw]").forEach(b=>b.addEventListener("click",()=>{hpw=+b.dataset.hpw;document.querySelectorAll("[data-hpw]").forEach(x=>x.setAttribute("aria-pressed",x===b?"true":"false"));calendar();}));
+calendar();
+(function(){const t=$("#asstab");const rows=[["Tool turns per session",TOK.turns],["Cached context at mid-session",TOK.ctx],["Fresh (uncached) input per session",TOK.fresh],["Cache writes per session",TOK.writes],["Output per session",TOK.out],["Retry factor",TOK.retry]];let h="<tr><th>Assumption</th><th class=num>Low</th><th class=num>Base</th><th class=num>High</th></tr>";rows.forEach(r=>h+=`<tr><td>${r[0]}</td>${r[1].map(v=>`<td class=num>${typeof v==="number"&&v>=1000?fmt(v):v}</td>`).join("")}</tr>`);const sess=TOK.retry.map(r=>Math.round(TOK.stages*r));h+=`<tr class=tot><td>Sessions (${TOK.stages} stages x retry)</td>${sess.map(v=>`<td class=num>${v}</td>`).join("")}</tr>`;t.innerHTML=h;})();
+function tokens(){const sess=TOK.retry.map(r=>Math.round(TOK.stages*r));return [0,1,2].map(i=>({fresh:sess[i]*TOK.fresh[i],writes:sess[i]*TOK.writes[i],reads:sess[i]*TOK.turns[i]*TOK.ctx[i],out:sess[i]*TOK.out[i]}));}
+(function(){const sel=$("#model");Object.keys(RATES).forEach(k=>{const o=el("option");o.value=k;o.textContent=k;sel.appendChild(o);});sel.value="Claude Fable 5.1";sel.addEventListener("change",()=>{setRates();cost();});setRates();cost();$("#codexn").addEventListener("input",cost);})();
+function setRates(){const r=RATES[$("#model").value];$("#rates").innerHTML=[["inp","Input"],["cw","Cache write (5 min)"],["cr","Cache read"],["out","Output"]].map(([k,l])=>`<label>${l}<br><input type="number" step="0.01" min="0" data-rate="${k}" value="${r[k]}"></label>`).join("");document.querySelectorAll("[data-rate]").forEach(i=>i.addEventListener("input",cost));}
+function cost(){const rate={};document.querySelectorAll("[data-rate]").forEach(i=>rate[i.dataset.rate]=+i.value||0);const T=tokens();const t=$("#toktab");let h="<tr><th>Total</th><th class=num>Low</th><th class=num>Base</th><th class=num>High</th></tr>";[["Fresh input","fresh"],["Cache writes","writes"],["Cache reads","reads"],["Output","out"]].forEach(([l,k])=>h+=`<tr><td>${l}</td>${T.map(x=>`<td class=num>${fmtM(x[k])}</td>`).join("")}</tr>`);const usd=T.map(x=>(x.fresh*rate.inp+x.writes*rate.cw+x.reads*rate.cr+x.out*rate.out)/1e6);h+=`<tr class=tot><td>API-equivalent, USD (hypothetical)</td>${usd.map(v=>`<td class=num>${v?fmt(Math.round(v)):"unknown"}</td>`).join("")}</tr>`;t.innerHTML=h;const verified=$("#model").value!=="Unknown (enter)";$("#ratenote").textContent=verified?"Rates verified 09-Sep-2026 on platform.claude.com/docs/en/about-claude/pricing; cache read on Claude Fable 5.1 is 0.025 x input, 0.1 x on other models. Edit any box to test a different assumption.":"No rate entered; the cost row stays unknown until you type rates.";window.__usd=usd;}
+/* ---------- ledger ---------- */
+(function(){$("#ledtab").innerHTML="<tr><th>Date</th><th>Package or stage</th><th>Sessions</th><th>Tool turns</th><th>Tokens observed (input / cache write / cache read / output)</th><th>Notes</th></tr>"+LEDGER.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("");})();
+/* ---------- downloads ---------- */
+(async function(){try{if(!window.claude||!window.claude.use)return;const d=await window.claude.use("downloads");if(!d)return;const b=$("#dl");b.hidden=false;b.addEventListener("click",async()=>{b.disabled=true;try{await d.save({filename:"tony-project-map.html",data:"<!doctype html>\n"+document.documentElement.outerHTML});$("#dlnote").textContent="Saved.";}catch(e){$("#dlnote").textContent=e&&e.code==="declined"?"Not saved.":"Download unavailable here; the file is on the branch.";}b.disabled=false;});}catch(e){}})();
+/* ---------- self-check: totals across views must agree ---------- */
+(function(){const {ta,th,n}=window.__stageTotals;const {A,H}=window.__eff;const incStages=INC.reduce((s,i)=>s+i.stages.length,0);const ok=n===31&&incStages===31&&Math.abs(ta-A[1])<0.01&&Math.abs(th-H[1])<0.01;const msg=`Self-check ${ok?"passed":"FAILED"}: ${n} stages listed, ${incStages} in increments; per-stage base hours agent ${fmt(ta)} / human ${fmt(th)} against increment base ${A[1]} / ${H[1]}. Sources: DISC_01 to DISC_05, STAGES.md (09-Sep-2026 re-cut), DECISIONS.md. Sample identifiers only; no Gamma figure appears.`;$("#foot").textContent=msg;if(!ok)$("#foot").style.color="var(--flag)";})();
+</script>

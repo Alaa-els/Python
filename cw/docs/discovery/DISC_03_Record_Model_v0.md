@@ -60,7 +60,7 @@ Statuses: package (budgeted, rfq drafted, quoted, selected, ordered, delivered, 
 
 | Table | One row = | Links | Notes |
 |---|---|---|---|
-| cost_budget | one budget amount for one cost_code on one revision | scheme_revision, cost_code, boq_item (optional) | baseline from F5 Handover; variation budgets from agreed VOs |
+| cost_budget | one budget amount for one cost_code on one revision | scheme_revision, cost_code, boq_item (optional) | baseline from F5 Handover; variation cost budgets come from variation_cost_budget rows (section 6), never from a VO's selling value or its agreement |
 | accrual | one cost expected but not yet invoiced | commitment_line or cost_code, period | reversed when the invoice is matched |
 | cost_actual | one actual cost line from the accounts export | scheme, cost_code, supplier_invoice (optional), period | import date and source row; creates rate_record (actual) where a unit exists |
 | cash_paid | one payment made to a supplier | supplier_invoice, period | date, amount |
@@ -70,10 +70,14 @@ Statuses: package (budgeted, rfq drafted, quoted, selected, ordered, delivered, 
 | risk | one commercial risk or opportunity | scheme, period | value, likelihood, owner, status |
 | early_warning | one early warning or delay notice | scheme, period, instruction (optional) | issuer, delay estimate, supporting evidence (F4 EWN) |
 
-Double-counting rules, each a test:
-- Cost to date for a code = matched invoices + unmatched invoices + accruals; an accrual and its matched invoice never both count in the same period.
-- A commitment counts as committed, never as cost, until an invoice or accrual exists against it.
-- A cash_paid row reduces the creditor balance; it never adds to cost.
+Authority and reconciliation rules (corrected 09-Sep-2026 after Codex review), each a test:
+- cost_actual, the imported ledger row, is the authority for actual cost. A supplier_invoice is a document about the same cost, not a second cost: when an invoice matches a ledger row the two are linked and the ledger row is what the report counts; an invoice with no ledger row yet counts once, as "invoiced, not yet in ledger", and drops out when its ledger row arrives; a ledger row with no invoice counts once and is flagged for a missing document.
+- Cost to date for a code = ledger actuals + invoices not yet in the ledger + open accruals, with the three sets disjoint by construction; the test builds all three overlaps and proves each figure appears once.
+- A commitment counts as committed, never as cost, until an invoice, ledger row or accrual exists against it.
+- Partial accrual reversal: an accrual is reduced by the amount matched to it, never zeroed by a partial invoice; the remainder stays open until matched or released with a reason.
+- Partial payments and receipts: cash_paid may cover part of an invoice and receipt may cover part of a certificate; balances are the difference, and a payment never adds to cost nor a receipt to value.
+- Credits: a credit note is a negative supplier_invoice matched to the invoice or ledger row it corrects; it reduces cost once and is never applied twice.
+- Allocations: an invoice or ledger row split across cost codes or items carries allocation lines whose amounts sum to the document total; the test refuses any other total.
 - A provisional sum's value is either the allowance or the replacement work, never both; replacement boq_items reference the provisional sum they draw down and the report nets them.
 - A snapshot, once written, is not recalculated; a correction is a new row in the next period with a reason.
 
@@ -82,16 +86,17 @@ Double-counting rules, each a test:
 | Table | One row = | Links | Notes |
 |---|---|---|---|
 | application | one application for payment for one period | scheme, period | number, date, previous cumulative, current, cumulative; retention and deductions computed from contract_terms; status (draft, submitted, assessed, certified, paid, closed) |
-| application_line | one line of one application | application, boq_item or variation_line | quantity or percent claimed, previous, current, cumulative; progress basis = accepted inspection_requests (rule below) |
+| application_line | one line of one application | application, boq_item or variation_line | quantity or percent claimed, previous, current, cumulative; the claimed figure is the QS's decision, recorded with its basis: the measured cumulative quantity, the evidence checks that passed or failed (section 8), and any override with a reason |
 | deduction | one deduction on one application | application, contract_terms | kind (retention, MCD, rebate, discount, contra charge), basis, amount |
 | certificate | one certification received against an application | application | date, certified per line, differences and comments |
 | receipt | one payment received | certificate | date, amount, retention released |
 | instruction | one instruction from the customer or main contractor | scheme, party | reference, date, kind (written, verbal confirmed, drawing issue), evidence |
-| variation | one change to the scheme | scheme, instruction (optional) | code = scheme code + sequence; description; status (raised, pricing, submitted, agreed, declined, instructed only, closed); claim percent; dates submitted and agreed; client reference |
-| variation_line | one line of a VO build-up | variation, cost_code, rate_record (optional) | quantity, rate, amount by head (site fixing hours, access, fixings, materials, specialist, manufacture, CAD, prelims, overhead, profit); progress percent |
+| variation | one change to the scheme | scheme, instruction (optional) | code = scheme code + sequence; description; four INDEPENDENT states: instruction_status (none, verbal, written, withdrawn), commercial_status (not submitted, submitted, agreed, declined, instructed only), valuation (claimed percent and amount per application; certified percent and amount per certificate), site_completion (from progress records); dates per state; client reference |
+| variation_line | one line of the VO SELLING build-up | variation, cost_code, rate_record (optional) | quantity, rate, amount by head (site fixing hours, access, fixings, materials, specialist, manufacture, CAD, prelims, overhead recovery, profit); this is client selling value |
+| variation_cost_budget | one line of the INTERNAL cost budget for a VO | variation, cost_code | amount by cost head; created when the VO is instructed (or, with a flag, when work starts before price agreement) so that work performed before agreement is tracked; seeded from the build-up's cost heads EXCLUDING overhead recovery and profit and then edited by the QS; never a copy of selling lines |
 | substantiation | one link from a VO to a piece of evidence | variation, evidence | why it substantiates |
 
-Rules: applied, certified and received are three different rows, never one field; a VO with no instruction row shows as claimed; an agreed VO adds its lines to cost_budget (variation budget) once, on agreement.
+Rules: applied, certified and received are three different rows, never one field; a VO with no instruction row shows as claimed on the income side but may still carry a variation_cost_budget and progress records; commercial agreement changes the VO's selling status only and never writes a cost budget; the variation_cost_budget is the only VO figure that enters the cost ledger, and it enters once; selling value and cost budget are reported side by side with their margin, never summed.
 
 ## 7. Manufacture
 
@@ -108,13 +113,15 @@ Rule: overhead allocation uses one company setting (per labour hour or percent o
 
 | Table | One row = | Links | Notes |
 |---|---|---|---|
-| progress_record | one capture from site | scheme, location, boq_item, programme_activity, variation (optional), instruction (optional) | kind (progress, dayworks, diary, quality); quantity or percent; who, when; evidence |
-| inspection_request | one request for inspection or sign-off | progress_record | state = internal_complete, submitted, acknowledged, accepted, rejected; each transition has actor, time and evidence |
+| progress_record | one capture from site | scheme, location, boq_item, programme_activity, variation (optional), instruction (optional) | kind (progress, dayworks, diary, quality); MEASURED quantity or percent for that item at that location as at the record date (a cumulative reading, not an increment); who, when; evidence; verification_state (unverified, verified internally by name and time) |
+| measured_progress | the current cumulative installed quantity per boq_item (or variation_line) per location | boq_item, location | derived, not typed: the latest verified reading per item and location, capped at the item quantity; several records for the same item and location supersede one another, they never add; a test proves that cumulative installed never exceeds the item quantity and never double counts |
+| inspection_request | one request for inspection or sign-off | progress_record | state = internal_complete, submitted, acknowledged, accepted, rejected; each transition has actor, time and evidence; acceptance is recorded only from an act of the client or their representative (a signed record, an email, a portal entry), never inferred from silence or elapsed time |
+| evidence_check | one configurable check a contract applies before a line may be claimed | contract_terms | examples: photo required; inspection submitted; client acknowledgement required; client acceptance required; drawing reference required; each with a severity (block, warn) per scheme |
 | defect | one defect or rework item | inspection_request, boq_item | raised by, description, status (open, reworked, re-inspected, closed) |
 | evidence | one file (photo, document, drawing mark-up) | any record via a link table | version, hash, taken_at, uploaded_by, location; role check on read |
 | location | one place on the scheme | scheme | building, level, zone, room |
 
-Rules: only accepted inspection_requests feed application_line progress; submitted and acknowledged show as claimed-not-accepted; a lack of response never advances the state; the state history is the audit record.
+Rules (corrected 09-Sep-2026 after Codex review): four things are kept apart and shown apart - physical measured progress (progress_record and measured_progress), internal verification (verification_state), the inspection cycle (inspection_request states) and the QS's application decision (application_line). None of them automatically sets another. The application line starts from measured_progress, runs the scheme's evidence_checks and shows each pass or fail beside the line; a blocking check stops the claim unless the QS records an override with a reason, which is kept in history and shown on the export; a warning check lets the claim through with the warning shown. Client acceptance is never deemed: no state advances on silence or on time elapsed. Submitted and acknowledged inspections are claimable if the scheme's checks allow it and are labelled as such; what they are not is proof of acceptance.
 
 ## 9. Cross-cutting
 
@@ -128,6 +135,6 @@ Rules: only accepted inspection_requests feed application_line progress; submitt
 ## 10. Money and progress status vocabulary
 
 - Money: budget, committed, accrued, actual, paid (cost side); applied, assessed, certified, received (income side); forecast.
-- Progress: internal_complete, submitted, acknowledged, accepted, rejected.
-- Variation: raised, pricing, submitted, agreed, declined, instructed_only, closed.
+- Measured progress: unverified, verified. Inspection: internal_complete, submitted, acknowledged, accepted, rejected. Application line: measured, checks passed / warned / blocked, overridden (with reason), claimed.
+- Variation, four independent axes: instruction none / verbal / written / withdrawn; commercial not submitted / submitted / agreed / declined / instructed only; valuation claimed and certified per period; site completion from measured progress.
 - Every exported figure shows its status label and its source row.

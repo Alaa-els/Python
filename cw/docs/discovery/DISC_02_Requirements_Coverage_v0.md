@@ -40,14 +40,14 @@
 | Cash-flow forecasts | COVERED | S21, S22 | unchanged. Increment 7 |
 | VOs, provisional sums, risks, early warnings in the reports | PARTIAL | VOs yes; the rest GAP | provisional_sum with replacement link; risk register; early_warning from the F4 EWN form. Increments 5 and 7 |
 | Period snapshots preserved | GAP | none | period_snapshot freezes every report figure per period; reports read snapshots. Increment 7 |
-| Prevent double counting across budgets, POs, invoices, accruals, payments | GAP | none | the cost ledger rules in DISC_03 section 5; tests per rule. Increment 7 |
+| Prevent double counting across budgets, POs, invoices, accruals, payments | GAP | none | the authority and reconciliation rules in DISC_03 section 5: ledger actuals are the authority and matching invoices are the same cost, not an addition; partial reversals, partial payments and receipts, credits and allocations each have a test. Increment 7 |
 | Prevent double counting of provisional sums and their replacement work | GAP | none | replacement work references the provisional sum it draws down; a test refuses value on both. Increment 5 |
 
 ## Area 4 - Applications and variation accounts
 
 | Requirement | Status | Where today | Delta and increment |
 |---|---|---|---|
-| Cumulative AFP / IPA from measured site progress, BOQ and VO accounts | COVERED | S07, S08, S14 | progress comes from site records (Increment 4) rather than typed percentages. Increment 6 |
+| Cumulative AFP / IPA from measured site progress, BOQ and VO accounts | COVERED | S07, S08, S14 | the line starts from measured_progress, runs the scheme's evidence checks and records the QS decision with any override; typed percentages remain possible as an override with a reason. Increment 6 |
 | Unique scheme-linked VO codes | PARTIAL | S13 assigns a reference | code = scheme code plus sequence; format setting. Increment 5 |
 | Instruction references, substantiation, status, progress on each VO | PARTIAL | S13, S14 | instruction record; substantiation = linked evidence rows; progress per VO line. Increment 5 |
 | Submission, agreement, certification, payment tracked separately | COVERED | S08, S14 | unchanged; F4 VA Summary has both sides. Increments 5, 6 |
@@ -82,8 +82,8 @@
 | Inspection and sign-off requests | PARTIAL | S28 sign-off record | inspection_request with the four states below. Increment 4 |
 | Defects and rework | GAP | none | defect record linked to the inspection and the item. Increment 4 |
 | Who / when, auditable | COVERED | history on every table | unchanged |
-| Distinguish internal completion, submitted inspection, client acknowledgement, actual acceptance | GAP | none | four explicit states plus rejected; each with actor and time. Increment 4 |
-| No response is not approval or payment entitlement | GAP | none | rule: only accepted feeds application progress; acknowledged and submitted show as claimed-not-accepted. Increment 4 (rule), Increment 6 (application) |
+| Distinguish internal completion, submitted inspection, client acknowledgement, actual acceptance | GAP | none | four explicit states plus rejected, each with actor and time; separate from measured progress and from the QS's claim decision; several records for one item and location supersede, never add. Increment 4 |
+| No response is not approval or payment entitlement | GAP | none | acceptance is recorded only from an act of the client, never deemed from silence or time; whether a submitted or acknowledged line may be claimed is a configurable evidence_check per scheme, with a QS override recorded with a reason; measured progress, verification, inspection and the QS decision are four separate things (DISC_03 section 8, corrected 09-Sep-2026). Increment 4 (states and checks), Increment 6 (application) |
 | Cloud evidence with project roles, version history, recoverable | PARTIAL | S03 roles; sources register; S05 backups | evidence rows with versions and hash; role check on read; restore test already in S05. Increment 4, Increment 8 for hosting |
 
 ## Consultant face

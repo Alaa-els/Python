@@ -17,8 +17,8 @@
 | F5 | GCSxxx - Quotation Internal Copy - Rev 0.xlsm | estimating workbook, internal copy | 16 (1 hidden) | ~240,000 | none | 5 (2) | #REF! 2,924, #N/A 2,250, #VALUE! 8 | 3 modules, see 3.6 |
 | F6 | Sinq - Variation Process.pdf | vendor walkthrough | 10 pages, image only | - | - | - | - | - |
 
-- [DIRECT] F1 and F3 carry the same creation timestamp and the same 1,549 broken defined names. F3 was cloned from F1, or both from one parent. Seven of F1's eight external targets recur in F3. High.
-- [DIRECT] External targets in F1 and F3 are workbooks on network drives (W:, J:, \\sdc.local, \\fs) and include a monthly commercial report, a finance sales and revenue forecast, an accounts-payable payments file, a procurement tracker, a CVR macro workbook dated 2019, and two quotation workbooks. These are the real upstream sources of the figures; none was supplied. High for their existence, Low for their content.
+- [DIRECT] F1 and F3 carry the same creation timestamp, the same 1,549 broken defined names and seven shared external targets. That is consistent with a common template origin; it is not by itself proof that one was cloned from the other (a shared timestamp alone would be weak evidence; the identical broken-name set and shared links are the stronger signal). Medium. (Wording corrected 09-Sep-2026 after management review.)
+- [DIRECT] External link targets in F1 and F3 are paths to workbooks on network drives (W:, J:, \\sdc.local, \\fs). Their file names suggest a monthly commercial report, a finance sales and revenue forecast, an accounts-payable payments file, a procurement tracker, a CVR macro workbook dated 2019 and two quotation workbooks. Only the link paths were read; none of those files was supplied, so their contents are inferred from names only. High that the links exist and are referenced by live formulas; Low for what the target files contain. (Wording corrected 09-Sep-2026.)
 - [DIRECT] The pound sign, en dashes and emoji appear in cells; F1 CONTROL column H holds emoji icons from the template. Irrelevant to the build; noted for fixture hygiene.
 
 ## 2. Mapping: source sheet to workflow area and record
@@ -83,12 +83,14 @@ Workflow areas are the seven numbered in the 09-Sep-2026 brief. Records are name
 ### 3.6 Macros (X10) - CLOSED by direct reading, not executed
 - [DIRECT] Three modules. Module1 builds the client copy: converts every sheet to values, deletes red-flagged rows, columns and tabs, prefaced by an eight-point estimator checklist. Module2 toggles column groups and Module3 trims empty rows on a sheet named "Pricing Matrix" that no longer exists in this file (dead code). Sheet modules are empty. Nothing reads or writes data the workbench would hold. High.
 
-### 3.7 Not found in any file - UNKNOWN
-- Programme or WBS activities (only link placeholders).
-- Actual cost transactions (only external links to an accounts-payable payments file and a finance forecast).
-- Purchase orders, deliveries, supplier invoices (F3 PP status columns only).
-- Inspection, defect or sign-off records of any kind.
-- Any real application, VO or CVR of Gamma's under the new company name; every populated file is WJL.
+### 3.7 What the files hold and what they do not - corrected 09-Sep-2026
+- Actual costs, SUMMARY level, present: F1 "0.4 Manufacturing" and F3 "3 Manuf PP" and "4 Design PP" hold per-job total spend, tender v actual hours and monthly expected v actual; F3 "2026 CVRs", "2025 CVRs", the per-job CVR tabs and "1 2026 PP" hold forecast / actual cost by head (material purchases, subcontractor, production labour, site prelims, design, PM) and material budget v spend. These are typed or linked summaries, not a ledger. [DIRECT]
+- Actual costs, TRANSACTION level, absent: no purchase ledger, supplier invoice list, payment list, timesheet or GRN exists in the six files. The summaries above are fed by external links whose target files were not supplied. [DIRECT]
+- Purchase orders, deliveries, supplier invoices: absent as records; F3 PP tabs carry status flags only (on order, delivered). [DIRECT]
+- Programme or WBS activities: absent; link placeholders only. [DIRECT]
+- Inspection, defect, sign-off records: absent. [DIRECT]
+- Real application, VO or CVR under the new company name: absent; every populated file is WJL, F4 and F5 are blank templates. [DIRECT]
+- Consequence for Increment 7: the cost ledger design is built and tested on fixtures; its real-data gate needs a transaction-level export (question Q1). The summary figures in F1 and F3 remain useful as reconciliation targets for the demo scheme's roll-up layout.
 
 ### 3.8 Prior-only observations kept
 - [PRIOR] CW_06 X2 (reporting lapsing: F1 actuals stop at Feb-2026): plausible from the dates read on the sheets but not re-measured here.
