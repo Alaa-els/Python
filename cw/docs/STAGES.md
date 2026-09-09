@@ -4,6 +4,7 @@
 - Status: TODO, READY (stage file signed by both, W-10), OPEN (session running), AUDIT, DONE, PARKED.
 - The stage file for each stage lives at docs/stages/Snn_<slug>.md and is written from docs/stages/_TEMPLATE.md before the session opens.
 - Scope: the whole commercial process of a small contractor, from handover to cost report, on one database, with the consultant face on the same records (D-14, 08-Sep-2026). Phases 3 and 4 were added on that date; later phases renumbered (map at the foot of this file).
+- 09-Sep-2026: D-15 widened Stage 1 to seven areas and docs/discovery/DISC_04 proposes the increment order and gates. This file is the execution schedule and is re-cut against DISC_04 once Alaa and Codex accept it; until then S00 stands as written and no other stage opens.
 
 ## Phase 0 - Spine, logins, roles (W0)
 
