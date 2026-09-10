@@ -9,7 +9,7 @@
 ## 2. Create the repository
 - Make a folder outside any WTP or OneDrive path, for example `C:\dev\cw`.
 - Unzip this skeleton into it. You should see CLAUDE.md, SETUP.md, docs/, handovers/, data/, tests/, .claude/, .gitignore.
-- Copy the seven plan files into `docs/plan/`:
+- Superseded 10-Sep-2026 (D-13 line): the seven CW_ plan files were never placed and the discovery documents in docs/discovery/ are the authoritative Stage 1 definition; docs/plan/ holds only history/. The list below is kept as a record of what was intended:
   - CW_01_Scope_and_Filter_v0.md
   - CW_02_Blueprint_v0.md
   - CW_03_Plan_v0.md (reference only; docs/STAGES.md is the live schedule)
@@ -47,7 +47,7 @@ Open stage S00 of the Commercial Workbench. Read CLAUDE.md, docs/FOUNDATION.md s
 | Decisions | docs/DECISIONS.md |
 | Schedule and gates | docs/STAGES.md |
 | The stage being built | docs/stages/Snn_*.md |
-| Product definition | docs/plan/CW_02_Blueprint_v0.md |
+| Product definition | docs/discovery/DISC_03_Record_Model_v0.md and DISC_04_Build_Increments_v0.md (the CW_ blueprint was never placed; D-13 line of 10-Sep-2026) |
 | Findings and risks | docs/FINDINGS.md, docs/RISKS.md |
 | What each stage delivered | handovers/Snn_handover.md |
 | Tony's files (never committed) | data/legacy/ |

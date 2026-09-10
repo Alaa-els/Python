@@ -5,8 +5,8 @@ You are building the Commercial Workbench with Alaa Elsayed and Mo Ashour. Read 
 ## What this is
 - One Django codebase, two faces on the same records: the Contractor edition (product for small contractors, they pay) and the Consultant edition (Alaa's and Mo's own work). A project setting `my_role` decides the face.
 - Scope (D-14): a small contractor's whole commercial process on one database - handover budgets, bill and rates, variations raised on the phone, applications and certification, costs and CVR, cash flow and forecasts, records, correspondence and claims, reports. Bookkeeping, the estimating engine and drawing reading stay out.
-- Stage 1 scope (D-15, 09-Sep-2026): seven areas from estimating history to phone site capture; discovery evidence, coverage, record model and increments in docs/discovery/DISC_01 to DISC_04. Increments are the reconciled plan; stages remain the unit of work.
-- Definition: docs/plan/CW_02_Blueprint_v0.md. Order and gates: docs/STAGES.md. Locked decisions: docs/DECISIONS.md (D-13 records that the CW set supersedes the earlier CCW set; a CCW id in an old document resolves through it). Never rederive these; if one does not fit the stage, stop and say so.
+- Stage 1 scope (D-15, 09-Sep-2026): seven areas from estimating history to phone site capture; discovery evidence, coverage, record model, increments and estimates in docs/discovery/. Increments are the reconciled plan; stages remain the unit of work.
+- Definition for Stage 1: docs/discovery/DISC_03_Record_Model_v0.md (records and rules) and DISC_04_Build_Increments_v0.md (increments and gates); evidence, coverage and estimates in the other files of docs/discovery/. Order and gates: docs/STAGES.md. Locked decisions: docs/DECISIONS.md. The CW_ plan set named in D-13 was never placed; the discovery set is authoritative (D-13 line of 10-Sep-2026) and the CCW set in docs/plan/history/ is history only. Never rederive these; if one does not fit the stage, stop and say so.
 
 ## How work happens (the stage protocol, docs/FOUNDATION.md section 2)
 - One stage per session, on branch `stage/Snn`, from `main` with a clean tree. Never two stages in one session. Stop at the stage boundary.
@@ -23,10 +23,10 @@ You are building the Commercial Workbench with Alaa Elsayed and Mo Ashour. Read 
 - Contract terms, thresholds and alarm settings are rows in settings tables, never constants in code. Export layouts are per-company templates, never hard-coded.
 - Money fields carry a `status` (draft, submitted, claimed, assessed, certified, agreed, instructed, paid, forecast). Contractor figures are claims until agreed; certified and instructed figures are labelled as such.
 - Every screen: one question, Next and Back, where you are, what is next, source shown beside each figure. Every export: readable first sheet (purpose, result, basis, action), no named ranges, neutral voice, metadata author `Alaa Elsayed`.
-- Delivered code and documents: British English, hyphens (never en or em dashes), pure ASCII, double-quoted Python strings, no AI or library traces in any file. `pytest tests/test_hygiene.py` enforces this.
+- Delivered code and documents: British English, hyphens (never en or em dashes), ASCII with currency symbols permitted, double-quoted Python strings, no AI or library traces in product-facing files (templates, exports, guides). Repository method documents may name the tools they describe (W-03 line of 10-Sep-2026). `pytest tests/test_hygiene.py` enforces this.
 - A feature built on one face states in the handover what the other face still needs.
 - Test data: `data/legacy/` (gitignored) holds Tony's files; fixtures under `tests/fixtures/` are anonymised extracts only. Never employer client data; if any appears, say so and stop.
-- Absorb Alaa's existing tools (listed in docs/plan/CW_01_Scope_and_Filter_v0.md section 4); never rewrite them.
+- Absorb Alaa's existing tools (listed in docs/plan/history/CCW_01_Idea_Filter_v0.md section 4, history copy); never rewrite them.
 
 ## Commands
 - Run: `python manage.py runserver` - Tests: `pytest` - Checks: `python manage.py check && pytest tests/test_hygiene.py`

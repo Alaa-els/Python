@@ -7,8 +7,8 @@
 - Django 5 project `cw/` with apps `core` and `projects`; settings from env with SQLite default and `DATABASE_URL` override; `MEDIA_ROOT` outside the repo; timezone Europe/London; British English locale.
 - Tooling: requirements.txt (django, django-simple-history, django-htmx, openpyxl, python-docx, pytest, pytest-django, dj-database-url, python-dotenv), pytest.ini, .env.example.
 - Tests named in the stage file section 5: hygiene (four), settings (two), docs (two).
-- Addition 1 (DISC_04 section 5): a second pytest configuration that runs the same suite against PostgreSQL when `TEST_DATABASE_URL` is set, skipped otherwise, so S02 can enforce the two-engine rule without changing S00's gate. Adds the driver `psycopg` to requirements.txt; named here so W-09 is satisfied.
-- Addition 2: a `tests/test_no_raw_sql.py` that greps the code for raw SQL and SQLite-specific functions and passes on an empty project; S02 keeps it passing.
+- Addition 1 (DISC_04 section 5): the same suite runs against PostgreSQL when `TEST_DATABASE_URL` is set, and against SQLite otherwise. The handover records which engines were actually run; a run that did not happen is reported as not run, never as passed. Adds the driver `psycopg` to requirements.txt; named here so W-09 is satisfied.
+- Addition 2: a `tests/test_no_raw_sql.py` that greps the code for raw SQL and engine-specific functions and passes on an empty project; S02 keeps it passing. It is a hygiene check, not proof of portability.
 - Out of scope: any model, screen, export, server, data.
 
 ## Deliverables
@@ -16,7 +16,7 @@
 - Commands in the handover: fresh clone, venv, install, `python manage.py check`, `pytest`.
 
 ## Acceptance proof
-- `python manage.py check` green; `pytest` green with every named test present; `tests/test_docs.py::test_named_plan_files_exist` passes only once the seven CW_ plan files are placed (Q: still not supplied; the test is written and its failure is the recorded gap, not a skip).
+- `python manage.py check` green; `pytest` green with every named test present. The former CW_ file gate is withdrawn (Codex review 10-Sep-2026): tests/test_docs.py checks that the authoritative documents exist and that CLAUDE.md and SETUP.md references resolve; the supersession is recorded under D-13; no placeholder file is created and no failing gate is skipped.
 - Tag S00-done; docs/STAGES.md S00 = DONE.
 
 ## Estimate (DISC_05 basis)
@@ -24,4 +24,4 @@
 
 ## Governance
 - W-10: Alaa signed 08-Sep-2026; Codex review is the second review (W-10 line of 09-Sep-2026); Mo's line stays blank until Mo signs.
-- Blocked by nothing external. Opens on Codex's go.
+- External dependencies: none. Mo's signature line stays blank; Codex's review of 10-Sep-2026 is the second review under the W-10 line of 09-Sep-2026. Opened 10-Sep-2026 on Codex's go.

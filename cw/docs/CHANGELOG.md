@@ -2,6 +2,13 @@
 
 - One line per change to a planning document. Newest first. Decisions are logged in DECISIONS.md; this file records which files changed and why.
 
+## 10-Sep-2026 - S00 repository bootstrap under W-13 (Codex review of 10-Sep-2026 applied)
+- Built: manage.py, cw/ (settings from environment, urls, wsgi, asgi), core/ and projects/ app shells with no models, requirements.txt pinned (Django 5.2.17 and the nine other packages at the versions installed that day), pytest.ini, .env.example, tests/ (hygiene, settings, docs, no-raw-sql; 12 tests). No screen, export or model.
+- Gates amended before building (Codex item 1): the CW_ file-existence gate is withdrawn and recorded under D-13; tests/test_docs.py checks the authoritative discovery, register and stage documents exist and that CLAUDE.md and SETUP.md references resolve; CLAUDE.md and SETUP.md references updated to files that exist; W-03 line scopes the tool-trace check to product-facing files; S00 stage file marked READY on Codex's review with Mo's line blank.
+- Estimates corrected (Codex item 2): DISC_05 human hours exclude Codex; token categories disjoint; full-depth sessions shown separately and combined; 31-stage totals labelled as excluding full-depth, discovery spent and Codex; weeks primary with indicative dates from one formula; one-hour cache sensitivity; retry and cache assumptions marked uncalibrated. Map updated to the same numbers.
+- Dependencies (Codex item 3): Django 5.2 series chosen as the LTS under D-04 and pinned to 5.2.17, the newest 5.2 patch on the package index; djangoproject.com and its docs are blocked by the network policy, so support status is recorded as unverified from official documentation. Two-engine check recorded honestly in handovers/S00_handover.md: SQLite and a local PostgreSQL 16.13 cluster both ran the suite and migrations.
+- Not done, by instruction (Codex item 4): no deploy, merge, purchase, subscription or model change, business-data commit or contact.
+
 ## 09-Sep-2026 - Tony Project discovery, second package: product and delivery map, estimates, re-cut (Alaa via Codex)
 - Added docs/discovery/DISC_05_Estimates_and_Usage_Ledger_v0.md: agent active hours separate from human review hours per increment, two calendar scenarios, token estimate with explicit low / base / high assumptions, API-equivalent cost from rates verified on the official platform pricing page, Max subscription treated as unbilled consumption with unverified limits left editable, usage ledger for calibration. The 231 to 320 hour figure is withdrawn with the reason.
 - Added docs/maps/tony_project_map.html: interactive product mind map, data-flow map and build roadmap with estimates, ledger and governance views; standalone copy committed here.
