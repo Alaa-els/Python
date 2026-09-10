@@ -17,7 +17,7 @@ You are building the Commercial Workbench with Alaa Elsayed and Mo Ashour. Read 
 - Steer by editing the stage file, never by mid-build correction. Where a stage premise diverges from the delivered state, the delivered state governs and the divergence is recorded.
 
 ## Verifiable rules
-- Python 3.12, Django 5, PostgreSQL in use, SQLite for development and tests (`DATABASE_URL` env, default SQLite). HTMX templates, no JavaScript framework. openpyxl and python-docx for exports.
+- Python 3.12 is the target; 3.11 or later is accepted for development until hosting fixes the runtime (D-04 line of 10-Sep-2026; S00 ran on 3.11.15). Django 5.2 LTS pinned in requirements.txt, PostgreSQL in use, SQLite for development and tests (`DATABASE_URL` env, default SQLite). HTMX templates, no JavaScript framework. openpyxl and python-docx for exports.
 - Every model: `company`, `created_by`, `created_at`, `updated_by`, `updated_at`, history via django-simple-history. Imported rows: `source_file`, `source_tab`, `source_row`, `imported_at`. No hard deletes: `status` closed or superseded.
 - Every view checks role plus project membership. A company never sees another company's rows. Tests prove both.
 - Contract terms, thresholds and alarm settings are rows in settings tables, never constants in code. Export layouts are per-company templates, never hard-coded.

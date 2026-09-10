@@ -93,7 +93,7 @@ Token consumption is estimated per stage session from disjoint categories, then 
 |---|---|---|---|---|---|
 | 09-Sep-2026 | Discovery, first package (DISC_01 to DISC_04) | 1 | about 30 | not shown for the main session; one read-only review subagent reported 62,721 tokens total for 4 tool uses | the container counter is a context budget, not billed usage |
 | 09-Sep-2026 | Discovery, second package (this document, the map, STAGES re-cut) | 1 (same session) | about 15 | not shown | same |
-| 10-Sep-2026 | S00 bootstrap (this session, continued) | 1 (same session) | about 12 | not shown | PostgreSQL 16.13 run locally for the two-engine check |
+| 10-Sep-2026 | S00 bootstrap (this session, continued) | 1 (same session) | about 20 | main session not shown; audit subagent 54,967 tokens, 22 tool uses | PostgreSQL 16.13 run locally for the two-engine check; 14 tests |
 | | S01 | | | | to be filled |
 
 - Calibration rule: after S00 to S06 close (two increments), compare observed turns and tokens per stage with section 4's base column and re-issue sections 2 to 5 as v1 with the measured ratios.

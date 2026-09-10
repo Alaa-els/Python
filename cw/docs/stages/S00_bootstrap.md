@@ -1,6 +1,6 @@
 # S00 - Repository bootstrap
 
-- Status: READY (W-10 as amended 09-Sep-2026: Codex review is the second review; Mo's line stays blank until he signs)
+- Status: DONE 10-Sep-2026 (audit handovers/S00_audit.md; close handovers/S00_handover.md; W-10 as amended 09-Sep-2026: Codex review is the second review; Mo's line stays blank until he signs)
 - Reviewed by (W-10): Alaa 08-Sep-2026, Codex 10-Sep-2026, Mo <not signed>
 - Branch: stage/S00. Tag on close: S00-done.
 
@@ -39,6 +39,7 @@
 - tests/test_docs.py::test_claude_md_and_setup_references_resolve
 - tests/test_docs.py::test_no_superseded_ccw_files_in_plan
 - tests/test_no_raw_sql.py::test_no_raw_sql_or_engine_specific_functions
+- tests/test_database.py::test_database_accepts_a_row (added at close for audit finding A-03)
 
 ## 6. Other-face note (W-07)
 - None; no face exists yet.

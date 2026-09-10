@@ -186,7 +186,7 @@ footer{margin-top:28px;font-size:11.5px;color:var(--ink3);border-top:1px solid v
         <tr><td>DISC_04 increments</td><td><span class="chip built">Built</span></td><td>corrected after review; STAGES.md re-cut from it</td></tr>
         <tr><td>DISC_05 estimates and ledger</td><td><span class="chip built">Built</span></td><td>uncalibrated; ledger empty of stage rows</td></tr>
         <tr><td>WP-01 S00 package</td><td><span class="chip built">Built</span></td><td>ready for Codex review</td></tr>
-        <tr><td>S00 bootstrap</td><td><span class="chip built">Built</span></td><td>see handovers/S00_handover.md for the check results</td></tr>
+        <tr><td>S00 bootstrap</td><td><span class="chip built">Built</span><span class="chip verified">Verified</span></td><td>DONE 10-Sep-2026: 14 tests green on SQLite and PostgreSQL 16.13; audit in handovers/S00_audit.md; handover in handovers/S00_handover.md</td></tr>
         <tr><td>S01 to S30 code</td><td><span class="chip proposed">Proposed</span></td><td>no code exists</td></tr>
         <tr><td>This map</td><td><span class="chip built">Built</span></td><td>totals computed from one data object; self-checked on load (see footer)</td></tr>
       </table>
@@ -238,7 +238,7 @@ const INC = [
 ];
 const FULLDEPTH={a:[10,15,25],h:[10,15,25]};
 const STAGES = {
- S00:{inc:1,t:"Repository bootstrap; test settings for SQLite and PostgreSQL",dep:"-",proof:"pytest and manage.py check green; tag S00-done",demo:"Demo",a:2,h:1.5,st:"proposed"},
+ S00:{inc:1,t:"Repository bootstrap; test settings for SQLite and PostgreSQL",dep:"-",proof:"14 tests green on both engines; manage.py check clean; tag S00-done (local)",demo:"Demo",a:2,h:1.5,st:"verified"},
  S01:{inc:1,t:"Spine walk-through part 1 (docs): DISC_03 sections 1, 2, 9",dep:"S00",proof:"Alaa signs; Codex reviews",demo:"Demo",a:1.5,h:2,st:"proposed"},
  S02:{inc:1,t:"Walk-through part 2, then every model, migration, admin, history; constraints in models; two-engine migrations",dep:"S01",proof:"both engines migrate; every table in admin; change in history; raw-SQL grep passes",demo:"Demo",a:3,h:2,st:"proposed"},
  S03:{inc:1,t:"Login, roles, company and scheme membership, permission check on every view",dep:"S02",proof:"two users see different rows; cross-company refused; site role cannot open office screens",demo:"Demo",a:2.5,h:1.5,st:"proposed"},
@@ -383,7 +383,7 @@ const RULES=[
 const LEDGER=[
  ["09-Sep-2026","Discovery, first package (DISC_01 to DISC_04)","1","about 30","not shown; one review subagent: 62,721 total for 4 tool uses","container counter is a context budget, not billed usage"],
  ["09-Sep-2026","Discovery, second package (DISC_05, map, STAGES re-cut)","1 (same session)","about 15","not shown","same"],
- ["10-Sep-2026","S00 bootstrap (same session, continued)","1","about 12","not shown","PostgreSQL 16.13 run locally for the two-engine check"],["","S01","","","","to be filled"]
+ ["10-Sep-2026","S00 bootstrap (same session, continued)","1","about 20","main session not shown; audit subagent 54,967 tokens, 22 tool uses","PostgreSQL 16.13 run locally for the two-engine check; 14 tests"],["","S01","","","","to be filled"]
 ];
 
 /* ---------- helpers ---------- */

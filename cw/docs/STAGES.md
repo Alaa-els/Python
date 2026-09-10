@@ -9,7 +9,7 @@
 
 | Stage | Deliverable | Depends on | Gate | A / H | Status |
 |---|---|---|---|---|---|
-| S00 | Repository bootstrap: Django project, settings from env, pytest, hygiene and docs tests, stage commands and auditor; test settings for both SQLite and PostgreSQL engines | - | `pytest` green, `manage.py check` green, tag S00-done | 2 / 1.5 | OPEN 10-Sep-2026 (Codex review as second review, W-10 line 09-Sep-2026; Mo's line blank) |
+| S00 | Repository bootstrap: Django project, settings from env, pytest, hygiene and docs tests, stage commands and auditor; test settings for both SQLite and PostgreSQL engines | - | `pytest` green, `manage.py check` green, tag S00-done | 2 / 1.5 | DONE 10-Sep-2026 (14 tests green on SQLite and PostgreSQL 16.13; tag S00-done local; Mo's line blank) |
 | S01 | Spine walk-through part 1 (docs only): DISC_03 sections 1, 2 and 9 with one example row per table | S00 | Alaa signs; Codex reviews | 1.5 / 2 | TODO |
 | S02 | Spine walk-through part 2 (DISC_03 sections 3 to 8), then every model, migration, admin and history; constraints in the models; migrations run on both engines in the test suite | S01 | fresh SQLite and PostgreSQL both migrate; every table in admin; a change appears in history; a raw-SQL grep test passes | 3 / 2 | TODO |
 | S03 | Login, roles (owner, editor, viewer, site), company membership, scheme membership, permission check on every view, home skeleton | S02 | two users on different schemes see different rows; cross-company access refused; a site role cannot open office screens | 2.5 / 1.5 | TODO |
