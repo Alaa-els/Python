@@ -14,7 +14,7 @@
 - PostgreSQL 16.13 (local cluster started for this session as a non-root user, socket connection, database cwtest): `TEST_DATABASE_URL="postgres://pgtest@/cwtest?host=/tmp/pgcw&port=5433" DEBUG=1 python -m pytest -p no:cacheprovider -q` -> 14 passed, including the create-and-read round trip in tests/test_database.py; `DATABASE_URL=... python manage.py migrate` applied the built-in migrations (10 tables in schema public); `manage.py check` clean.
 - What the two-engine run proves: settings resolve to each engine, Django's built-in migrations apply on both, and one row round-trips on both. It does not prove portability of product models, which do not exist yet; S02 extends the check to every model.
 - Python in use: 3.11.15 (D-04 line of 10-Sep-2026; 3.12 remains the target).
-- Django support status: the 5.2 series is taken as the long-term support series under D-04 and pinned to 5.2.17, the newest 5.2 patch on the package index on 10-Sep-2026; djangoproject.com and its documentation were blocked by the network policy, so support dates are recorded as unverified from official documentation.
+- Django support status: closed 10-Sep-2026. Codex verified on djangoproject.com/download/ that 5.2 is the LTS series, latest 5.2.17, extended support to April 2028. This session could not reach that site (network policy); the verification is Codex's document check, not a rerun here.
 
 ## Decisions touched
 - D-13 dated line (CW_ set never placed; discovery set authoritative). W-03 dated line (tool-trace check scoped to product-facing files). D-04 dated line (Python 3.11 accepted for development). W-10 line of 09-Sep-2026 applied; W-13 applies.
@@ -25,17 +25,36 @@
 ## Other-face note (W-07)
 - None; no face exists yet.
 
-## CMD run block (fresh clone)
+## Run block (fresh clone)
+
+POSIX shell (Linux, macOS, WSL, Git Bash):
+
 ```
-cd cw
+git clone <repository> && cd cw
 python -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py check
 python -m pytest -q
-# optional, with a PostgreSQL you own:
+# optional PostgreSQL pass (needs a reachable server and an empty database)
 TEST_DATABASE_URL=postgres://user:password@localhost:5432/cwtest python -m pytest -q
 ```
+
+PowerShell (Windows):
+
+```
+git clone <repository>; cd cw
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python manage.py check
+python -m pytest -q
+# optional PostgreSQL pass
+$env:TEST_DATABASE_URL = "postgres://user:password@localhost:5432/cwtest"; python -m pytest -q
+```
+
+- Keep DEBUG=1 and the development key only on a developer machine. Any hosted build (S24) sets DEBUG=0 and a real SECRET_KEY; the settings refuse to start otherwise.
+- The default MEDIA_ROOT is a cw_media folder beside the cw project folder; while cw sits inside the holding repository that folder is still inside that repository's root and is gitignored there. Set MEDIA_ROOT explicitly on any shared machine.
 
 ## Codex review brief
 - handovers/S00_codex_brief.md.

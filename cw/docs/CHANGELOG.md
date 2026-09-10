@@ -2,6 +2,10 @@
 
 - One line per change to a planning document. Newest first. Decisions are logged in DECISIONS.md; this file records which files changed and why.
 
+## 10-Sep-2026 - S00 accepted by Codex; S01 walk-through delivered
+- S00: Django 5.2 LTS support verified by Codex on djangoproject.com (latest 5.2.17, extended support to April 2028); recorded in requirements.txt, D-04 and the S00 handover. Handover run block now given in POSIX shell and PowerShell; DEBUG and development-key caveat and the MEDIA_ROOT location note added.
+- S01: docs/walkthroughs/W1_spine_part1.md (21 tables, invariants I-1 to I-7, defaults, three questions), docs/stages/S01_walkthrough_part1.md, handovers/S01_handover.md. STAGES.md S01 = AUDIT pending Codex review. docs/packages/WP-03_S02_models.md written as the next bounded brief.
+
 ## 10-Sep-2026 - S00 repository bootstrap under W-13 (Codex review of 10-Sep-2026 applied)
 - Built: manage.py, cw/ (settings from environment, urls, wsgi, asgi), core/ and projects/ app shells with no models, requirements.txt pinned (Django 5.2.17 and the nine other packages at the versions installed that day), pytest.ini, .env.example, tests/ (hygiene, settings, docs, no-raw-sql; 12 tests). No screen, export or model.
 - Gates amended before building (Codex item 1): the CW_ file-existence gate is withdrawn and recorded under D-13; tests/test_docs.py checks the authoritative discovery, register and stage documents exist and that CLAUDE.md and SETUP.md references resolve; CLAUDE.md and SETUP.md references updated to files that exist; W-03 line scopes the tool-trace check to product-facing files; S00 stage file marked READY on Codex's review with Mo's line blank.

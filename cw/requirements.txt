@@ -1,5 +1,5 @@
 # Pinned at S00, 10-Sep-2026, to the versions installed and tested that day.
-# Django 5.2 is the long-term support series chosen under D-04; 5.2.17 was the newest 5.2 patch on the package index.
+# Django 5.2 is the LTS series (verified by Codex on djangoproject.com/download/ on 10-Sep-2026: latest 5.2.17, extended support to April 2028); pinned to 5.2.17.
 django==5.2.17
 django-simple-history==3.13.0
 django-htmx==1.29.0
