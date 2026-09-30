@@ -1656,6 +1656,38 @@ for rr in range(first4, last4 + 1):
     for col in (5, 6, 8):
         if pg.cell(rr, col).value not in (None, ''): pg.cell(rr, col).fill = GREY
 
+# --- generic pass: any remaining formula that reads another tab or another row gets a link to its first source
+REF_RE = re.compile(r"(?:'([^']+)'!|(?<![A-Za-z_])([A-Za-z][A-Za-z ]*?)!)?\$?([A-Z]{1,2})\$?(\d+)(?![\d(])")
+def first_source(formula, own, own_row):
+    for m in REF_RE.finditer(formula):
+        sheet = m.group(1) or m.group(2) or own
+        end = m.end()
+        if formula[end:end + 1] == ':' or formula[m.start() - 1:m.start()] == ':':   # a range: skip
+            continue
+        if sheet not in wb.sheetnames: continue
+        col, row = m.group(3), int(m.group(4))
+        if sheet == own and row == own_row: continue
+        if sheet == own and m.group(0).count('$') == 2: continue   # fixed calendar constants ($C$14, $C$15) are not a source
+        return sheet, col, row
+    return None
+def label_col(ws, row, col):
+    if ws.cell(row, 1).value not in (None, ''): return 'A'
+    if ws.cell(row, 2).value not in (None, ''): return 'B'
+    return col
+added = 0
+for ws in (asm, bu, pg, wb['Build-Up Comparison']):
+    for row in ws.iter_rows():
+        for c in row:
+            v = c.value
+            if c.hyperlink or not isinstance(v, str) or not v.startswith('=') or v.startswith('="'): continue
+            src = first_source(v, ws.title, c.row)
+            if not src: continue
+            sheet, col, r_ = src
+            if sheet == ws.title and r_ == c.row: continue
+            tgt_ws = wb[sheet]
+            if tgt_ws.cell(r_, 1).value in (None, '') and tgt_ws.cell(r_, 2).value in (None, '') and tgt_ws.cell(r_, openpyxl.utils.column_index_from_string(col)).value in (None, ''): continue
+            linkify(c, f"#'{sheet}'!{label_col(tgt_ws, r_, col)}{r_}"); added += 1
+print('generic links added', added)
 # --- XER WBS: navigation row
 navlink(wx, 5, 2, "Back to 'Programme'", "#'Programme'!A1")
 navlink(wx, 5, 13, "Back to 'Assessment'", "#'Assessment'!A1")
