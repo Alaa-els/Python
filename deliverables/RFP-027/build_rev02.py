@@ -624,7 +624,7 @@ HISTW = [
  ('04-Dec', 7, 4, 3, 'Tank 2 nozzles; readiness milestone 03-Dec', 'Skilled: nozzle fitters (Item 6) and pipework (Item 8) - unresolved, both priced elsewhere. Helpers: nozzle attendance; Tank 1 disinfection'),
  ('11-Dec', 5, 3, 2, 'Tie-in; transfer; Tank 2 test; disinfection', 'Skilled: tie-in fitters within 8.14 and 8.15. Helpers: transfer 05 to 07-Dec and Tank 2 top-up and hold attendance - priced here, so line 7.4 is nil'),
  ('18-Dec', 0, 0, 0, 'Demobilisation (carried basis from 16-Dec)', 'No approved labour: Tank 2 sampling 12-Dec and discharge 16 to 17-Dec (7.8) and commissioning specialists (7.13 to 7.17) priced on their own lines'),
- ('25-Dec', 0, 0, 0, 'Demobilisation ends 23-Dec (assessment allowance)', 'No approved labour: demobilisation clean-up is line 1.16'),
+ ('25-Dec', 0, 0, 0, 'Demobilisation ends 23-Dec (Assessed basis)', 'No approved labour: demobilisation clean-up is line 1.16'),
 ]
 b_first = r
 wk_end = _dt.date(2026, 8, 28)
@@ -1554,8 +1554,8 @@ PHRASES = [
  ("Nil: the transfer labour is within the approved manpower histogram", "Included in line 5.10 (approved histogram helpers): the transfer labour is within the approved manpower histogram"),
  ("Carried basis if", "Assessment allowance if"), ("carried basis", "assessment allowance"), ("Carried basis", "Assessment allowance"),
  ("the carried quantity", "the assessment-allowance quantity"), ("Carried:", "Assessment allowance:"), ("Carried =", "Assessment allowance ="),
- ("as-submitted amounts", "submitted-programme amounts"), ("as submitted and carried", "in the submitted programme and in the assessment allowance"),
- ("as submitted as submitted and carried", "in the submitted programme and in the assessment allowance"),
+ ("as-submitted amounts", "submitted-programme amounts"), ("as submitted and carried", "in the SAMA Submitted Programme and in the Assessed basis"),
+ ("as submitted as submitted and carried", "in the SAMA Submitted Programme and in the Assessed basis"),
  ("not carried into the assessment", "not included in the assessment"), ("Not carried", "Not included in the assessment"), ("not carried", "not included in the assessment"),
  ("is carried at nil", "is included at nil"), ("hire days carried", "hire days used"), ("Hire days carried", "Hire days used"),
  ("the departure carried to", "the departure taken to"), ("is carried to 'Build-Up'", "goes to 'Build-Up'"), ("carried to 'Build-Up'", "taken to 'Build-Up'"),
@@ -1579,7 +1579,7 @@ for _n in ('Assessment', 'Build-Up', 'Build-Up Comparison', 'Programme'):
 bu['A4'] = ("How to read this tab: each line is quantity x rate = amount, with the reason beside it ('Basis': what the line buys, how many, how long, the rate and "
             "where the quantity comes from). Item totals go to column J of the 'Assessment' tab; the 'Return' link on each total row goes back there. A quantity in blue "
             "is a link to the 'Programme' tab row it is calculated from - click it. Units: a 'month' is 30.4 calendar days; a 'day' is one calendar day of hire or "
-            "attendance; a 'man-day' is one person for one working day; working days exclude Fridays. 'Needs confirmation' marks an assessment allowance the "
+            "attendance; a 'man-day' is one person for one working day; working days exclude Fridays. 'Needs confirmation' marks an assessed allowance the "
             "Contractor has not yet substantiated; 'Provisional' marks a scope or price awaiting a document. All amounts exclude VAT.")
 bu.row_dimensions[4].height = 84
 for row in bu.iter_rows(min_row=9, max_row=bu.max_row):
