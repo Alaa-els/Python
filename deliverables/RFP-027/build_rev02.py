@@ -318,27 +318,27 @@ p15 = add3('P15', "Milestone - SAJCO readiness for the tie-in connections (exter
 p16 = add3('P16', 'Tie-in connections with the existing pump room (working days)', f"={AS('QCD18TSECONTC2040')}", f"={AF('QCD18TSECONTC2040')}", f"={WD(f'C{r}', f'D{r}')}",
            f"=C{r}", f"=D{r}", f"=E{r}", "Activity QCD18TSECONTC2040, 05 to 08-Dec-2026, 4 working days, following the readiness milestone. Same on both bases")
 p17 = add3('P17', 'Testing and commissioning as programmed - both tanks in parallel (working days)', f"={AS('QCD18TSECONTCT12050')}", f"={AF('QCD18TSECONTCT22030')}", f"={WD(f'C{r}', f'D{r}')}",
-           '-', '-', '-', "Activities QCD18TSECONTCT12050 and QCD18TSECONTCT22030, 09 to 16-Dec-2026, 7 working days each, in parallel. Not carried: the Engineer's (KEO) email of 30-Aug-2026 states that installation and testing will not be in parallel and that one tank is filled and the water re-used for the second. The sequential fit is at P18 to P21")
+           '-', '-', '-', "Basis A only: activities QCD18TSECONTCT12050 and QCD18TSECONTCT22030, 09 to 16-Dec-2026, 7 working days each, in parallel, with two simultaneous fills. Not carried: the Engineer's (KEO) email of 30-Aug-2026 states that installation and testing will not be in parallel and that one tank is filled and the water re-used for the second. The sequential sequence carried on Basis B is at P18 to P22; the same sequence fitted to the submitted erection dates is the sensitivity S1 below")
 # sequential testing fitted: A columns = fitted to the submitted erection dates; B columns = fitted to the efficient chain
-p18 = add3('P18', 'Hydrostatic test - Tank 1, before the tie-in (working days)', f"={NEXT(f'D{p8}')}", f"={W(f'C{r}', f'E{r}')}", f"={AWD('QCD18TSECONTCT12050')}",
-           f"={NEXT(f'G{p8}')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}",
-           "Fitted on both bases: starts the working day after the Tank 1 mechanical works and takes the 7 working days the Contractor programmed per tank. On the submitted dates it sits inside the 15 working days of float the programme gives Tank 1 (17 to 24-Nov-2026), so it does not delay anything. Assumptions: Tank 1 internals flushed and nozzles blind-flanged (RFP Scope of Works work packages 4 and 5); fill by tankered supply pending the Employer's confirmation of a local source; the water is retained in Tank 1 until Tank 2 is ready - losses are the 10 per cent top-up at 'Build-Up' line 7.5", height=70)
-p19 = add3('P19', 'Transfer of the test water from Tank 1 to Tank 2 (working days)', f"={NEXT(f'MAX(D{p18},D{p14})')}", f"={W(f'C{r}', f'E{r}')}", 3,
-           f"={NEXT(f'MAX(G{p18},G{p14})')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}",
+p18 = add3('P18', 'Hydrostatic test - Tank 1, before the tie-in (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
+           f"={NEXT(f'G{p8}')}", f"={W(f'F{r}', f'H{r}')}", f"={AWD('QCD18TSECONTCT12050')}",
+           "Basis B: starts the working day after the Tank 1 mechanical works and takes the 7 working days the Contractor programmed per tank (the only programme evidence of a test duration). Assumptions: Tank 1 internals flushed and nozzles blind-flanged (RFP Scope of Works work packages 4 and 5); fill by tankered supply pending the Employer's confirmation of a local source; the water is retained in Tank 1 until Tank 2 is ready - losses are the 10 per cent top-up at 'Build-Up' line 7.5", height=70)
+p19 = add3('P19', 'Transfer of the test water from Tank 1 to Tank 2 (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
+           f"={NEXT(f'MAX(G{p18},G{p14})')}", f"={W(f'F{r}', f'H{r}')}", 3,
            "Starts the working day after both the Tank 1 test has passed (P18) and Tank 2 is ready to receive water (mechanical works complete, P14, and interior flushed - RFP Scope of Works work package 4). Pumped tank to tank through temporary hoses with the tank outlet valves isolated; the tie-in to the pump room is not needed for the transfer. 3 working days is an assessed assumption pending the Contractor's method statement: 3,774 m3 at about 130 m3 per hour over 10-hour shifts, a 150 mm self-priming diesel pump against a low head (adjacent tanks at the same level, about 4 m static plus hose friction) - 'Build-Up' lines 7.2 to 7.4")
-p20 = add3('P20', 'Hydrostatic test - Tank 2 (working days)', f"={NEXT(f'D{p19}')}", f"={W(f'C{r}', f'E{r}')}", f"={AWD('QCD18TSECONTCT22030')}",
-           f"={NEXT(f'G{p19}')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}",
-           "Follows the transfer; 7 working days as programmed per tank. On the submitted dates 08 to 15-Dec-2026, ending within the programmed testing window")
-p21 = add3('P21', 'Component and subsystem checks after the tie-in - instruments, nozzles, valves, ladders; tank-pump-network interfaces (working days)', f"={NEXT(f'D{p16}')}", f"={W(f'C{r}', f'E{r}')}", 3,
-           f"={NEXT(f'G{p16}')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}",
-           "RFP Scope of Works 5.2, component testing and subsystem validation. Follows the tie-in on both bases and may overlap the Tank 2 hydrostatic test, because these checks do not need both tanks in service. 3 working days is an assessed assumption: the Contractor's programme has no separate activity for this stage (its 7-working-day 'Testing & Commissioning' activities cover the hydrostatic test and commissioning of each tank together), and programme durations are in any case not of themselves payable")
-p21b = add3('P21b', 'Integrated system commissioning - full operational demonstration and witness testing (working days)', f"={NEXT(f'MAX(D{p16},D{p20},D{p21})')}", f"={W(f'C{r}', f'E{r}')}", 3,
-           f"={NEXT(f'MAX(G{p16},G{p20},G{p21})')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}",
-           "RFP Scope of Works 5.2, integrated system commissioning. Starts the working day after the last of the tie-in (P16), the Tank 2 hydrostatic test (P20) and the component checks (P21): both tanks must have passed and be connected before full operation is demonstrated. 3 working days is an assessed assumption on the same footing as P21. On the submitted erection dates the Tank 2 test ends 15-Dec-2026, so completion falls after the Contractor's programmed date of 16-Dec-2026; that is a consequence of testing sequentially, as the Engineer requires, and is shown, not forced either way")
-p22 = add3('P22', 'Completion of testing and commissioning - both tanks', f"=D{p21b}", f"=C{r}", '-', f"=G{p21b}", f"=F{r}", '-',
-           "End of the integrated system commissioning. The Contractor's programme has completion milestones QCD18TSEOMS1040 and 1050 on 16-Dec-2026 with parallel testing", 'ms')
-p23 = add3('P23', 'Demobilisation, as-built drawings and close-out documents (working days)', f"={NEXT(f'D{p22}')}", f"={W(f'C{r}', f'E{r}')}", f"={AWD('QCD18TSEDMOB1020')}",
-           f"={NEXT(f'G{p22}')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}", "Activities QCD18TSEDMOB1020 and QCD18TSEDMOB3020, programmed 17 to 24-Dec-2026, 7 working days in parallel. On both bases re-timed to follow the completion of sequential testing (P22); the programme as submitted, with parallel testing, ends on 24-Dec-2026")
+p20 = add3('P20', 'Hydrostatic test - Tank 2 (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
+           f"={NEXT(f'G{p19}')}", f"={W(f'F{r}', f'H{r}')}", f"={AWD('QCD18TSECONTCT22030')}",
+           "Follows the transfer; 7 working days as programmed per tank")
+p21 = add3('P21', 'Component and subsystem checks after the tie-in - instruments, nozzles, valves, ladders; tank-pump-network interfaces (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
+           f"={NEXT(f'G{p16}')}", f"={W(f'F{r}', f'H{r}')}", 3,
+           "RFP Scope of Works 5.2, component testing and subsystem validation. Follows the tie-in and may overlap the Tank 2 hydrostatic test, because these checks do not need both tanks in service. 3 working days is an assessed assumption, not a programme figure: the Contractor's programme has no separate activity for this stage - its two 7-working-day 'Testing & Commissioning' activities cover the hydrostatic test and the commissioning of each tank together - so the sequential basis separates 7 working days per hydrostatic test (the programmed figure) from 3 plus 3 working days for the checks and the integrated commissioning (assessed). Programme durations are in any case not of themselves payable")
+p21b = add3('P21b', 'Integrated system commissioning - full operational demonstration and witness testing (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
+           f"={NEXT(f'MAX(G{p16},G{p20},G{p21})')}", f"={W(f'F{r}', f'H{r}')}", 3,
+           "RFP Scope of Works 5.2, integrated system commissioning. Starts the working day after the last of the tie-in (P16), the Tank 2 hydrostatic test (P20) and the component checks (P21): both tanks must have passed and be connected before full operation is demonstrated. 3 working days is an assessed assumption on the same footing as P21")
+p22 = add3('P22', 'Completion of testing and commissioning - both tanks', f"={AF('QCD18TSEOMS1040')}", f"=C{r}", '-', f"=G{p21b}", f"=F{r}", '-',
+           "A: completion milestones QCD18TSEOMS1040 and 1050, 16-Dec-2026, with parallel testing. B: end of the integrated system commissioning, conditional on the Tank 1 test preceding the tie-in (P18); if it cannot, see sensitivity S2", 'ms')
+p23 = add3('P23', 'Demobilisation, as-built drawings and close-out documents (working days)', f"={AS('QCD18TSEDMOB1020')}", f"={AF('QCD18TSEDMOB1020')}", f"={WD(f'C{r}', f'D{r}')}",
+           f"={NEXT(f'G{p22}')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}", "Activities QCD18TSEDMOB1020 and QCD18TSEDMOB3020, 17 to 24-Dec-2026, 7 working days in parallel. B follows the completion of testing (P22)")
 # derived periods
 pg.cell(r, 2, 'Derived periods used on the \'Build-Up\' tab'); cp(S_TOTLBL, pg.cell(r, 2))
 for c in range(1, 11):
@@ -346,7 +346,7 @@ for c in range(1, 11):
 pg.row_dimensions[r].height = 19.5
 r += 1
 d1 = add3('D1', 'Site period - mobilisation start to demobilisation finish (calendar days)', f"=C{p1}", f"=D{p23}", f"=D{r}-C{r}+1", f"=F{p1}", f"=G{p23}", f"=G{r}-F{r}+1",
-          "Site staff, workforce transport, welfare cabins, WC, water tank and deliveries, the continuous 30 kVA welfare generator, the site pick-up and the watchman run for this period, which includes the demobilisation week so that supervision, HSE and welfare cover the demobilisation. On both bases the end is set by the external readiness milestone of 03-Dec-2026 and the tie-in, sequential testing, commissioning and demobilisation that follow it; the bases differ only in how the Tank 2 test sits against the tie-in. The programme as submitted, with parallel testing, gives 22-Aug to 24-Dec-2026, 125 days", 'cd')
+          "Site staff, workforce transport, welfare cabins, WC, water tank and deliveries, the continuous 30 kVA welfare generator, the site pick-up and the watchman run for this period, which includes the demobilisation week so that supervision, HSE and welfare cover the demobilisation. A: the programme as submitted, 22-Aug to 24-Dec-2026. B: the end is set by the external readiness milestone of 03-Dec-2026 and the tie-in, sequential testing, commissioning and demobilisation that follow it, conditional on the early Tank 1 test (P18); the site engineer's 3 close-out days at 'Build-Up' line 1.22 fall after this period and are intentionally off-site visits, not a second allowance", 'cd')
 d2 = add3('D2', 'Works period - mobilisation start to completion of testing and commissioning (calendar days)', f"=C{p1}", f"=D{p22}", f"=D{r}-C{r}+1", f"=F{p1}", f"=G{p22}", f"=G{r}-F{r}+1",
           "The daytime 100 kVA works generator runs for this period; no works power is needed during demobilisation, when the welfare generator alone continues", 'cd')
 d3 = add3('D3', 'Erection window - Tank 1 base panels start to Tank 2 mechanical finish (calendar days)', f"=C{p3}", f"=D{p14}", f"=D{r}-C{r}+1", f"=F{p3}", f"=G{p14}", f"=G{r}-F{r}+1",
@@ -359,6 +359,25 @@ d6 = add3('D6', 'Access equipment window - Tank 1 walls start to Tank 2 roof fin
           "Mobile access towers and podium steps are hired by the month for the period the walls, bracing and roofs are worked on; rounded up to whole months at 'Build-Up' lines 5.4 and 5.6", 'cd')
 d7 = add3('D7', 'Storage containers window - first panels on site to last roof panel installed (calendar days)', f"=C{d4}", f"=D{p13}", f"=D{r}-C{r}+1", f"=F{p3}", f"=G{p13}", f"=G{r}-F{r}+1",
           "A: first delivery 08-Sep-2026 to Tank 2 roof finish 30-Nov-2026. B: efficient sequence; storage between staged deliveries is the Contractor's risk", 'cd')
+# --- sensitivity block (submitted-date fit; Basis B without the early Tank 1 test)
+pg.cell(r, 2, 'Sensitivities - not carried; same durations and dependencies as P18 to P23'); cp(S_TOTLBL, pg.cell(r, 2))
+for c in range(1, 11):
+    if c != 2: cp(S_TOTLBL, pg.cell(r, c))
+pg.row_dimensions[r].height = 19.5
+r += 1
+def sens(ref, name, cs, cf, cd, deriv, height=None):
+    return add3(ref, name, cs, cf, cd, '-', '-', '-', deriv, 'cd', height)
+t1t_f = W(NEXT(f'D{p8}'), 7); xf_f = W(NEXT(f'MAX({t1t_f},D{p14})'), 3); t2t_f = W(NEXT(xf_f), 7); cc_f = W(NEXT(f'D{p16}'), 3)
+s1_fin = W(NEXT(f'MAX(D{p16},{t2t_f},{cc_f})'), 3)
+s1a = sens('S1', 'Sequential testing on the submitted erection dates - Tank 1 test after its mechanical works, transfer after Tank 2 mechanical works, Tank 2 test, then integrated commissioning (calendar days from mobilisation)', f"=C{p1}", f"={s1_fin}", f"=D{r}-C{r}+1",
+           "Tank 1 test 17 to 24-Nov-2026 within its float; transfer 05 to 07-Dec after the Tank 2 mechanical works; Tank 2 test 08 to 15-Dec; integrated commissioning 16 to 19-Dec-2026, three working days after the Contractor's 16-Dec-2026 completion milestone. Shows that the Engineer's sequential requirement extends the submitted programme unless the Contractor re-sequences; not carried", 60)
+b_t1t_f = W(NEXT(f'G{p16}'), 7); b_xf_f = W(NEXT(b_t1t_f), 3); b_t2t_f = W(NEXT(b_xf_f), 7); b_cc_f = W(NEXT(f'G{p16}'), 3)
+b_ic_f = W(NEXT(f'MAX(G{p16},{b_t2t_f},{b_cc_f})'), 3); b_dm_f = W(NEXT(b_ic_f), 7)
+s2 = sens('S2', 'Basis B if the Tank 1 test cannot precede the tie-in - Tank 1 test after the tie-in, transfer, Tank 2 test, integrated commissioning, demobilisation (calendar days from mobilisation)', f"=F{p1}", f"={b_dm_f}", f"=D{r}-C{r}+1",
+          "Tank 1 test 09 to 16-Dec-2026; transfer 17 to 20-Dec; Tank 2 test 21 to 28-Dec; component checks 09 to 12-Dec in parallel; integrated commissioning 29 to 31-Dec-2026; demobilisation 02 to 09-Jan-2027 (Fridays and the calendar exception excluded). The additional site days against D1 (Basis B) are shown at S3", 60)
+s3 = add3('S3', 'S2 - effect on the carried assessment (additional calendar days; additional amount in SAR, excluding Overhead and Profit)', f"=E{s2}-H{d1}", '-', 'SENS_AMT', '-', '-', '-',
+          "Additional site days multiplied by the monthly rates of the lines priced on the site period D1 ('Build-Up' 1.1 to 1.8, 1.10, 1.12, 1.13, 5.8, 5.9) and on the works period D2 (5.7), with two extra water deliveries a week, months rounded as in Section 4. Not carried: it applies only if the Engineer does not accept the early Tank 1 test", 44)
+pg.cell(s3, 3).number_format = '#,##0'; pg.cell(s3, 5).number_format = '#,##0.00'
 SEC3_END = r - 1
 
 # --- Section 4: re-based lines
@@ -410,9 +429,9 @@ L('7.2', 101, "=0", "=7", "Transfer pump: not needed on A; 7 days on B (P19 tran
 L('7.3', 102, "=0", "=1", "Transfer hoses: not needed on A; 1 week on B")
 L('7.4', 103, "=0", "=6", "Transfer labour: not needed on A; 2 No. x 3 days on B (P19)")
 L('7.5', 104, "=ROUND(2*3774*0.1,0)", "=ROUND(3774*0.1,0)", "Top-up at 10 per cent of the water filled: of two fills on A, of one fill on B (retention in Tank 1 between P18 and P19)")
-L('7.13', 112, f"=E{p21}+E{p21b}+2", f"=H{p21}+H{p21b}+2", "Component checks P21 and integrated commissioning P21b, plus one day at each hydrostatic test hold; the fills and holds themselves are supervised by the QA/QC inspector (line 1.3) and the supplier's leak-test supervision within Item 6")
-L('7.14', 113, f"=2*(E{p21}+E{p21b})", f"=2*(H{p21}+H{p21b})", "2 No. technicians for the component checks P21 and the integrated commissioning P21b")
-L('7.16', 115, f"=E{p16}+1", f"=H{p16}+1", "Tie-in P16 working days plus one day of integrated commissioning")
+L('7.13', 112, f"=E{p17}+1", f"=H{p21}+H{p21b}+2", "A: the programmed 7-working-day parallel testing and commissioning activity plus one day at the hold. B: component checks P21 (3 days) and integrated commissioning P21b (3 days), both assessed assumptions, plus one day at each hydrostatic test hold; the fills and holds themselves are supervised by the QA/QC inspector (line 1.3) and the supplier's leak-test supervision within Item 6")
+L('7.14', 113, f"=2*E{p17}", f"=2*(H{p21}+H{p21b})", "2 No. technicians: A for the 7-day programmed activity; B for the component checks P21 and the integrated commissioning P21b (6 days)")
+L('7.16', 115, f"=E{p16}+1", f"=H{p16}+1", "Tie-in P16 working days plus one day of integrated commissioning, both bases")
 L('7.22', 121, "=8", "=8", "Tanker and pump standby: 3 fill days and 1 hold day for Tank 1, 3 transfer days and 1 hold day for Tank 2; the same on both bases because the programme's parallel testing would need the same standby for two simultaneous fills")
 
 first4 = r
@@ -440,6 +459,12 @@ for ref, burow, qA, qB, deriv, prev in LINES:
     bu.cell(burow, 4).value = f"=Programme!$G${r}"
     r += 1
 last4 = r - 1
+# sensitivity S3 amount: rate x additional months for the D1/D2-based lines, plus deliveries
+d1_rows = [rr for rr in range(first4, last4 + 1) if pg.cell(rr, 1).value in ('1.1', '1.2', '1.3', '1.4', '1.5', '1.6', '1.7', '1.8', '1.10', '1.12', '1.13', '5.8', '5.9', '5.7')]
+dl_row = [rr for rr in range(first4, last4 + 1) if pg.cell(rr, 1).value == '1.9'][0]
+pg.cell(s3, 5).value = ('=' + '+'.join(f"D{rr}*(ROUND(({'H'+str(d2) if pg.cell(rr, 1).value == '5.7' else 'H'+str(d1)}+C{s3})/{MON},1)-G{rr})" for rr in d1_rows)
+                        + f"+D{dl_row}*(2*ROUNDUP((H{d1}+C{s3})/7,0)-G{dl_row})")
+cp(S_AMT, pg.cell(s3, 5)); pg.cell(s3, 5).number_format = '#,##0.00'
 # item subtotals and totals on each basis
 sub = {}
 for item, label in (('1', 'Item 1 - lines listed above'), ('5', 'Item 5 - lines listed above'), ('7', 'Item 7 - lines listed above')):
