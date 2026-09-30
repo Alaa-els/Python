@@ -11,6 +11,25 @@ def est(text, width, sz=10):
     cpl = max(8, width * 1.15 * 10 / sz)
     return math.ceil(len(text) / cpl) * (sz * 1.28) + 4
 
+def autofit(ws, min_row=1, max_row=None):
+    """Raise a row's height where wrapped text would not fit (PT Sans 10 pt: about 1.15 characters per width unit, 12.8 pt per line)."""
+    merged = {}
+    for rg in ws.merged_cells.ranges:
+        c1, r1, c2, r2 = rg.bounds
+        if r1 == r2:
+            merged[(r1, c1)] = sum((ws.column_dimensions[get_column_letter(c)].width or 8.66) for c in range(c1, c2 + 1))
+    for row in ws.iter_rows(min_row=min_row, max_row=max_row):
+        for c in row:
+            if not isinstance(c.value, str) or c.value.startswith('=') or not c.value.strip(): continue
+            if not (c.alignment and c.alignment.wrap_text): continue
+            width = merged.get((c.row, c.column), ws.column_dimensions[get_column_letter(c.column)].width or 8.66)
+            sz = (c.font.sz or 10)
+            cpl = max(8, width * 1.15 * 10 / sz)
+            lines = sum(max(1, math.ceil(len(p) / cpl)) for p in c.value.split('\n'))
+            need = lines * (sz * 1.28) + 4
+            cur = ws.row_dimensions[c.row].height
+            if cur is None or need > cur:
+                ws.row_dimensions[c.row].height = round(need, 1)
 SRC = 'src/master_rev01.xlsx'
 OUT = 'stageA.xlsx'
 REV = 'Rev 02'
@@ -94,14 +113,41 @@ bu['G122'] = ("Not assessed. The Contractor is arranging a third-party factory a
               "factory test reports among the handover documents; that is the manufacturer's own test record, within the supplier's supply, "
               "and does not require a third-party inspector. The line is carried at nil until an Engineer's instruction or an approved ITP "
               "requiring third-party inspection is evidenced; the Contractor has not claimed it separately")
-bu['B123'] = 'TOTAL ITEM 7 - both tanks'
-bu['F123'] = '=SUM(F100:F122)'
-bu['F124'] = '=F123/2'
 bu.row_dimensions[122].height = 78
+# ---------------------------------------------------------------- Build-Up: insert rows for 7.24 (Tank 1 operating fill) and 7.25 (spray disinfection) at 123-124
+shift_refs(wb, 'Build-Up', 123, 2)
+insert_rows_keep_styles(bu, 123, 2, 121)
+bu['A123'] = '7.24'
+bu['B123'] = 'Tank 1 operating volume for the integrated commissioning - tankered fill to about 1 m depth after the test water has gone to Tank 2'
+bu['C123'] = 'm3'
+bu['D123'] = 1020   # replaced by the Programme link in Section 5
+bu['E123'] = '=E100'
+bu['F123'] = '=D123*E123'
+bu['G123'] = ("Quantity: 34 m x 30 m x 1.0 m = 1,020 m3, an assessed operating depth for the witnessed pumping demonstration from Tank 1 (RFP Scope of Works 5.2, "
+              "integrated system commissioning) - the Engineer decides the depth; Tank 1 is empty after its test water is pumped to Tank 2. Filled by tanker on 09 and "
+              "10-Dec-2026 while Tank 2 is on its hold ('Programme' tab, window P20b), attended by the approved histogram helpers (duty H11), so no extra labour and no "
+              "programme effect. A network refill after the tie-in is not assumed: no source, cost or timing has been confirmed by the Employer. If the Engineer "
+              "requires Tank 1 at full test level for the commissioning, see sensitivity S8 on the 'Programme' tab. Rate: as 7.1 - needs confirmation of the water source")
+bu['A124'] = '7.25'
+bu['B124'] = 'Disinfection of the tank surfaces above the test water line (walls above 3.7 m, roof underside, hatches) - spray or swab application, both tanks'
+bu['C124'] = 'tank'
+bu['D124'] = 2
+bu['E124'] = 2000
+bu['F124'] = '=D124*E124'
+bu['G124'] = ("Quantity: 2 tanks. The chlorinated test water (7.6, 7.7) disinfects only the surfaces it touches, up to the 3.7 m test level; the surfaces above it are not "
+              "covered by that method and need a separate spray or swab application (AWWA C652 surface-application method). Tank 2 on 03 and 05-Dec-2026 before the "
+              "transfer, Tank 1 on 08-Dec after it is emptied. Rate: assessment allowance per tank - 2 people x 2 days, sprayer hire, hypochlorite solution and "
+              "confined-space attendance - needs confirmation by the Contractor's method statement; if the histogram helpers do the work, SAR 600 per tank is "
+              "already in 5.10 and falls away here")
+bu.row_dimensions[123].height = 105
+bu.row_dimensions[124].height = 92
+bu['B125'] = 'TOTAL ITEM 7 - both tanks'
+bu['F125'] = '=SUM(F100:F124)'
+bu['F126'] = '=F125/2'
 
 # ---------------------------------------------------------------- Programme tab
 pg = wb.create_sheet('Programme', index=wb.sheetnames.index('Build-Up Comparison') + 1)
-widths = {'A': 6, 'B': 46, 'C': 12, 'D': 12, 'E': 9, 'F': 14, 'G': 20, 'H': 14, 'I': 14, 'J': 52}
+widths = {'A': 6, 'B': 46, 'C': 12, 'D': 12, 'E': 11, 'F': 14, 'G': 20, 'H': 15, 'I': 14, 'J': 52}
 for k, v in widths.items():
     pg.column_dimensions[k].width = v
 pg.sheet_view.showGridLines = False
@@ -133,21 +179,34 @@ def para(ws, r, text, ncol=10, height=None, bold=False):
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=ncol)
     if bold:
         f = copy.copy(ws.cell(r, 1).font); f = Font(name=f.name, sz=f.sz, b=True, color=f.color); ws.cell(r, 1).font = f
-    ws.row_dimensions[r].height = height or max(15, 13 * (len(text) // 210 + 1))
+    mw = sum((ws.column_dimensions[get_column_letter(c)].width or 8.66) for c in range(1, ncol + 1))
+    ws.row_dimensions[r].height = max(height or 15, est(text, mw))
 
 def header(ws, r, labels, merge_ij=False):
     for i, t in enumerate(labels, 1):
         c = ws.cell(r, i, t); cp(S_HDR, c)
     if merge_ij:
         cp(S_HDR, ws.cell(r, 10)); ws.merge_cells(start_row=r, start_column=9, end_row=r, end_column=10)
-    ws.row_dimensions[r].height = 32
+    need = max(est(t, 0.8 * (ws.column_dimensions[get_column_letter(i)].width or 8.66)) for i, t in enumerate(labels, 1) if t)   # bold headers wrap on word boundaries
+    ws.row_dimensions[r].height = max(32, min(70, need)); PG['hdr'] = ws.row_dimensions[r].height
 
-PG = {'used': 0.0}
-def pg_add(h): PG['used'] += h
+class _PG(dict):
+    """'used' is the height already on the current Programme page: title rows plus every row since the last break, after wrapping."""
+    def __getitem__(self, k):
+        if k == 'used':
+            lb = max([b.id for b in pg.row_breaks.brk], default=0)
+            start, end = lb + 1, globals()['r']
+            if end > start: autofit(pg, start, end - 1)
+            return (58.0 if lb else 0.0) + sum((pg.row_dimensions[i].height or 14.4) for i in range(start, end))
+        return dict.__getitem__(self, k)
+PG = _PG(hdr=32.0)
+def pg_add(h): pass
 def pg_break(ws, r):
     ws.row_breaks.append(Break(id=r - 1)); PG['used'] = 58.0   # the repeated title rows 1 to 3
-HDR3 = ['Ref', 'Window', 'Start - as submitted', 'Finish - as submitted', 'Days - as submitted', 'Start - carried', 'Finish - carried', 'Days - carried', 'Where the dates come from']
-HDR4 = ['Ref', "'Build-Up' line", 'Unit', 'Rate (SAR)', 'Qty - Rev 01', 'Qty - programme as submitted', 'Qty - carried', 'Amount - as submitted (SAR)', 'Amount - carried (SAR)', 'Where the quantity comes from']
+def pg_break_if(ws, r, need):
+    if PG['used'] + need > PAGE: pg_break(ws, r)
+HDR3 = ['Ref', 'Programme window', 'Start - SAMA Submitted Programme', 'Finish - SAMA Submitted Programme', 'Days - SAMA Submitted Programme', 'Start - Assessed', 'Finish - Assessed', 'Days - Assessed (used)', 'Where the dates come from and why']
+HDR4 = ['Ref', "'Build-Up' line", 'Unit', 'Rate (SAR)', 'Qty - Rev 01 (superseded)', 'Qty - SAMA Submitted Programme (comparison)', 'Qty - Assessed (used on the Build-Up)', 'Amount - SAMA Submitted Programme (comparison, SAR)', 'Amount - Assessed (SAR)', 'Where the quantity comes from']
 HDR5 = ['No.', 'Activity (as named in the programme)', 'Start', 'Finish', 'Working days', 'Cost loaded (SAR, incl. 5% OHP)', 'Activity ID', 'Calendar', 'Total float (days)', 'Programme section (as named)']
 def hdr4(ws, r):
     header(ws, r, HDR4[:9]); ws.cell(r, 10, HDR4[9]); cp(S_HDR, ws.cell(r, 10))
@@ -162,10 +221,12 @@ pg['A1'] = "THE CONTRACTOR'S PROGRAMME - ACTIVITY DATA AND DURATION BASES"; cp(S
 pg['A2'] = 'TSE Irrigation Storage Tanks and Associated Pipeworks (RFP-027) - Contract QPMO-410-CT-05958'; cp(S_SUB, pg['A2']); pg.row_dimensions[2].height = 17.4
 pg['A3'] = f'Contractor: SAMA Construction   |   Engineer: KEO   |   Cost Consultant: WT Partnership   |   {REV}, {DOCDATE}'; cp(S_SUB2, pg['A3'])
 para(pg, 4, ("How this tab works. The Contractor's programme is imported as received on the 'XER WBS' tab. Section 1 records its status. Section 2 is the "
-             "working calendar. Section 3 turns the activities into the windows the assessment needs - as submitted, and as carried with the Engineer's one-fill "
-             "testing fitted in - every date looked up by activity ID. Section 4 is the resource bridge: the approved manpower histogram week by week, plant days "
-             "from the activity dates, site staff by phase. Section 5 lists every 'Build-Up' quantity taken from this tab, as submitted beside carried; the carried "
-             "figure is the one the 'Build-Up' tab uses. Section 6 links every 'Build-Up' line to its activities. All amounts exclude VAT."), height=70)
+             "working calendar. Section 3 turns the activities into the windows the assessment needs: the submitted programme beside the assessment allowance "
+             "(the Engineer's one-fill testing fitted to the submitted erection dates), every date looked up by activity ID. Section 4 is the resource bridge: the "
+             "approved manpower histogram week by week, plant days from the activity dates, site staff by phase. Section 5 lists every 'Build-Up' quantity taken "
+             "from this tab. Section 6 links every 'Build-Up' line to its activities. Blue figures are links: a reference in column A opens the 'Build-Up' line, a "
+             "date or count opens its source row. Units: 'working days' exclude Fridays; 'calendar days' count every day; a month is 30.4 calendar days; a "
+             "man-day is one person for one working day. All amounts exclude VAT."), height=84)
 
 # Section 1 - status
 banner(pg, 6, '1. STATUS OF THE PROGRAMME AND OF THE INSTRUCTION')
@@ -246,10 +307,11 @@ acts.sort(key=lambda a: (a['start'], a['id']))
 assert len(acts) == 81 and abs(sum(a['cost'] for a in acts) - 8110296.62) < 0.05
 
 # --- Section 3 layout
-banner(pg, 17, '3. PROGRAMME WINDOWS - A: AS SUBMITTED; B: AS CARRIED (SUBMITTED ERECTION DATES, SEQUENTIAL TESTING)')
-para(pg, 18, ("'As submitted' reproduces the programme, including its parallel testing. 'Carried' keeps every erection date as submitted and fits in the "
-              "Engineer's one-fill testing and the demobilisation after it. Every date is looked up from the 'XER WBS' tab by activity ID. The labour and plant for "
-              "these windows are in Section 4."), height=44)
+banner(pg, 17, '3. PROGRAMME WINDOWS - THE SUBMITTED PROGRAMME, AND THE ASSESSMENT ALLOWANCE BUILT ON ITS ERECTION DATES WITH SEQUENTIAL TESTING')
+para(pg, 18, ("Two sets of dates. 'Submitted programme' (columns C to E) reproduces the Contractor's programme, including its parallel testing of both tanks. "
+              "'Assessment allowance' (columns F to H, yellow border) keeps every erection date as submitted and fits in the Engineer's one-fill sequential testing "
+              "and the demobilisation after it; these are the dates the assessment uses. Every source date is looked up from the 'XER WBS' tab by activity ID - "
+              "click a blue date to open the activity there. The people and plant for these windows are in Section 4."), height=58)
 header(pg, 19, HDR3, merge_ij=True)
 PG['used'] = sum((pg.row_dimensions[i].height or 14.4) for i in range(1, 20))
 
@@ -374,10 +436,10 @@ rows3 = []  # (ref, window, A_start, A_finish, A_days, B_start, B_finish, B_days
 r = 20
 def add3(ref, window, As, Af, Ad, Bs, Bf, Bd, deriv, kind='wd', height=None):
     global r
-    height = max(height or 30, est(window, 46), est(deriv, 114))
+    height = max(height or 30, est(window, 46), est(deriv, 66))
     if PG['used'] + height > PAGE:
         old = r
-        pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(32)
+        pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(PG['hdr'])
         # the caller built its same-row references against the row before the repeated header was inserted
         fix = lambda v: re.sub(r'(?<![A-Z$])([C-H])' + str(old) + r'(?!\d)', lambda m: m.group(1) + str(r), v) if isinstance(v, str) else v
         As, Af, Ad, Bs, Bf, Bd = map(fix, (As, Af, Ad, Bs, Bf, Bd))
@@ -426,7 +488,7 @@ p15 = add3('P15', "Milestone - SAJCO readiness for the tie-in connections (exter
 p16 = add3('P16', 'Tie-in connections with the existing pump room (working days)', f"={AS('QCD18TSECONTC2040')}", f"={AF('QCD18TSECONTC2040')}", f"={WD(f'C{r}', f'D{r}')}",
            *same(r), "Activity QCD18TSECONTC2040, 05 to 08-Dec-2026, 4 working days, following the readiness milestone")
 p17 = add3('P17', 'Testing and commissioning as programmed - both tanks in parallel (working days)', f"={AS('QCD18TSECONTCT12050')}", f"={AF('QCD18TSECONTCT22030')}", f"={WD(f'C{r}', f'D{r}')}",
-           '-', '-', '-', "As submitted only: activities QCD18TSECONTCT12050 and QCD18TSECONTCT22030, 09 to 16-Dec-2026, 7 working days each, in parallel, with two simultaneous fills. Not carried: the Engineer's (KEO) email of 30-Aug-2026 states that installation and testing will not be in parallel and that one tank is filled and the water re-used for the second. The sequential, task-based sequence carried is at P18 to P22")
+           '-', '-', '-', "As submitted only: activities QCD18TSECONTCT12050 and QCD18TSECONTCT22030, 09 to 16-Dec-2026, 7 working days each, in parallel, with two simultaneous fills. Not carried: the Engineer's (KEO) email of 30-Aug-2026 states that installation and testing will not be in parallel and that one tank is filled and the water re-used for the second. The sequential, task-based sequence the assessment uses is at P18 to P22")
 p18 = add3('P18', 'Hydrostatic test - Tank 1, before the tie-in (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
            f"={NEXT(f'D{p8}')}", f"={W(f'F{r}', f'H{r}')}", f"={AWD('QCD18TSECONTCT12050')}",
            "Carried: starts the working day after the Tank 1 mechanical works (submitted date) and takes the 7 working days the Contractor programmed per tank. Elapsed sequence assumed within those 7 days: tankered filling about 5 working days, the 24-hour hold (unattended apart from level readings), inspection of joints and nozzles and records 1 day. The fill rate is an assumption, not a measured throughput: 3,774 m3 in 5 days needs about 750 m3 a day, for example two 30 m3 tankers on about 12 round trips each, which depends on the water source the Employer has yet to confirm; if the source is further away the elapsed time lengthens but the attendance does not. Attendance: the QA/QC inspector (1.3, monthly) and the commissioning engineer for one day at the end of the hold (7.13); the supplier's leak-test supervision is within Item 6. It sits inside the 15 working days of float the programme gives Tank 1 (17 to 24-Nov-2026). Conditional on an Engineer-approved method: internals flushed and nozzles blind-flanged (RFP Scope of Works work packages 4 and 5), the water retained in Tank 1 until Tank 2 is ready, losses at 'Build-Up' line 7.5", 96)
@@ -435,12 +497,18 @@ p19 = add3('P19', 'Transfer of the test water from Tank 1 to Tank 2 (working day
            "Starts the working day after both the Tank 1 test has passed (P18) and Tank 2 is ready to receive water (mechanical works complete, P14, interior flushed). Pumped tank to tank through temporary hoses with the outlet valves isolated; the tie-in is not needed for the transfer. 3 working days is an assessed assumption pending the Contractor's method statement: 3,774 m3 at about 130 m3 an hour over 10-hour shifts, a 150 mm self-priming diesel pump against a low head (adjacent tanks at one level, about 4 m static plus hose friction) - 'Build-Up' lines 7.2 to 7.4")
 p20 = add3('P20', 'Hydrostatic test - Tank 2, after the transfer (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
            f"={NEXT(f'G{p19}')}", f"={W(f'F{r}', f'H{r}')}", 4,
-           "Elapsed 4 working days (08, 09, 10 and 12-Dec; 11-Dec is a Friday): top-up to test level on 08-Dec, the 24-hour hold on 09-Dec (unattended apart from level readings), inspection on 10-Dec, sampling and inspection on 12-Dec - 3 attended days out of 4 (Section 4, dated check H8). With the 3 transfer days the Tank 2 sequence is 7 working days from the start of the transfer, the programme's per-tank figure. Disinfection relies on the dosed water carried over (see the water sequence below the derived periods) - a provisional method; acceptance rests on the 12-Dec samples")
+           "Elapsed 4 working days (08, 09, 10 and 12-Dec; 11-Dec is a Friday): top-up to test level on 08-Dec, the 24-hour hold on 09-Dec (unattended apart from level readings), inspection on 10-Dec, sampling and inspection on 12-Dec - 3 attended days out of 4 (Section 4, dated check H8). With the 3 transfer days the Tank 2 sequence is 7 working days from the start of the transfer, the programme's per-tank figure. Disinfection relies on the dosed water brought over (see the water sequence below the derived periods) - a provisional method; acceptance rests on the 12-Dec samples")
+p20b = add3('P20b', 'Tank 1 operating fill for the commissioning demonstration - tankered, about 1 m depth (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
+           f"={NEXT(f'MAX(G{p19},G{p16})')}", f"={W(f'F{r}', f'H{r}')}", 2,
+           "Assessment allowance: Tank 1 is empty after the transfer (P19), and the integrated commissioning (P21b) needs both tanks connected and holding water. About 1,020 m3 "
+           "(1 m depth) is tankered in on the two working days after the tie-in and the transfer, while Tank 2 is on its hold - off the critical path, attended by the approved "
+           "helpers (Section 4, duty H11). The depth the Engineer requires is not established; a full fill is sensitivity S8. Water from the network after the tie-in is not "
+           "assumed: no source has been confirmed. Not in the submitted programme, which fills both tanks in full for parallel testing", 'wd', 80)
 p21 = add3('P21', 'Component and subsystem checks after the tie-in - instruments, nozzles, valves, ladders; tank-pump-network interfaces (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
            f"={NEXT(f'G{p16}')}", f"={W(f'F{r}', f'H{r}')}", 3,
            "RFP Scope of Works 5.2, component testing and subsystem validation. Follows the tie-in and may overlap the Tank 2 hydrostatic test, because these checks do not need both tanks in service. 3 working days is an assessed assumption, not a programme figure: the Contractor's programme has no separate activity for this stage (its two 7-working-day 'Testing & Commissioning' activities cover the hydrostatic test and the commissioning of each tank together). Staffing at 'Build-Up' lines 7.13 to 7.18")
 p21b = add3('P21b', 'Integrated system commissioning - full operational demonstration and witness testing (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
-           f"={NEXT(f'MAX(G{p16},G{p20},G{p21})')}", f"={W(f'F{r}', f'H{r}')}", 3,
+           f"={NEXT(f'MAX(G{p16},G{p20},G{p21},G{p20b})')}", f"={W(f'F{r}', f'H{r}')}", 3,
            "RFP Scope of Works 5.2, integrated system commissioning. Starts the working day after the last of the tie-in (P16), the Tank 2 hydrostatic test (P20) and the component checks (P21): both tanks must have passed and be connected before full operation is demonstrated. Pumping is demonstrated from Tank 2, which holds the dechlorinated test water; Tank 1 is empty after the transfer and is demonstrated on valves and instruments only (water sequence below; S8 if the Engineer requires more). Release also needs the Engineer's acceptance of the Tank 2 samples. 3 working days is an assessed assumption on the same footing as P21")
 p22 = add3('P22', 'Completion of testing and commissioning - both tanks', f"={AF('QCD18TSEOMS1040')}", f"=C{r}", '-', f"=G{p21b}", f"=F{r}", '-',
            "As submitted: completion milestones QCD18TSEOMS1040 and 1050, 16-Dec-2026, with parallel testing. Carried: end of the integrated system commissioning, conditional on the Tank 1 test preceding the tie-in (P18); if it cannot, see sensitivity S2", 'ms')
@@ -448,7 +516,7 @@ p23 = add3('P23', 'Demobilisation, as-built drawings and close-out documents (wo
            f"={NEXT(f'G{p22}')}", f"={W(f'F{r}', f'H{r}')}", f"=E{r}", "Activities QCD18TSEDMOB1020 and QCD18TSEDMOB3020, 17 to 24-Dec-2026, 7 working days in parallel. B follows the completion of testing (P22)")
 # derived periods
 if PG['used'] + 19.5 + 120 > PAGE:
-    pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(32)
+    pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(PG['hdr'])
 pg_add(19.5)
 pg.cell(r, 2, 'Derived periods used in Sections 4 and 5'); cp(S_TOTLBL, pg.cell(r, 2))
 for c in range(1, 11):
@@ -456,7 +524,7 @@ for c in range(1, 11):
 pg.row_dimensions[r].height = 19.5
 r += 1
 d1 = add3('D1', 'Site period - mobilisation start to demobilisation finish (calendar days)', f"=C{p1}", f"=D{p23}", f"=D{r}-C{r}+1", f"=F{p1}", f"=G{p23}", f"=G{r}-F{r}+1",
-          "The continuous site establishment runs for this period: welfare cabins, WC, water tank and deliveries, the 30 kVA welfare generator, the site pick-up, workforce transport and the watchman, and the site staff whose duties cover the demobilisation week (Section 4, roles). As submitted: the programme as submitted, 22-Aug to 24-Dec-2026. Carried: the same erection dates with the sequential testing carried, conditional on the early Tank 1 test (P18). The site engineer's 3 close-out days at 'Build-Up' line 1.22 fall after this period and are intentionally off-site visits, not a second allowance", 'cd')
+          "The continuous site establishment runs for this period: welfare cabins, WC, water tank and deliveries, the 30 kVA welfare generator, the site pick-up, workforce transport and the watchman, and the site staff whose duties cover the demobilisation week (Section 4, roles). As submitted: the programme as submitted, 22-Aug to 24-Dec-2026. Carried: the same erection dates with the sequential testing fitted in, conditional on the early Tank 1 test (P18). The site engineer's 3 close-out days at 'Build-Up' line 1.22 fall after this period and are intentionally off-site visits, not a second allowance", 'cd')
 d2 = add3('D2', 'Works period - mobilisation start to completion of testing and commissioning (calendar days)', f"=C{p1}", f"=D{p22}", f"=D{r}-C{r}+1", f"=F{p1}", f"=G{p22}", f"=G{r}-F{r}+1",
           "The daytime 100 kVA works generator runs for this period; no works power is needed during demobilisation, when the welfare generator alone continues", 'cd')
 d3 = add3('D3', 'Erection window - Tank 1 base panels start to Tank 2 mechanical finish (calendar days)', f"=C{p3}", f"=D{p14}", f"=D{r}-C{r}+1", *same(r),
@@ -467,23 +535,25 @@ d7 = add3('D7', 'Storage containers window - first panels on site to last roof p
           "First delivery 08-Sep-2026 to the Tank 2 roof finish 30-Nov-2026. Panels have to be stored from the first delivery whatever the erection pace; storage is priced by the container-month, so the delivery staging adds no separate cost here", 'cd')
 # --- water sequence (provisional method)
 if PG['used'] + 120 > PAGE:
-    pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(32)
+    pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(PG['hdr'])
 pg_add(120)
-para(pg, r, ("Water sequence - provisional method, for the Contractor's method statement and the Engineer's approval; nothing here is verified. (1) Tank 1 filled by "
-             "tanker to the 3.7 m test level, 3,774 m3 ('Build-Up' 7.1), plus up to 10 per cent top-up over the sequence (7.5). (2) Tank 1 held 24 hours and "
-             "inspected. (3) The same water is dosed in Tank 1 with hypochlorite (7.6) and circulated, contact 24 hours, sampled (7.10, 7.11). (4) The dosed water is "
-             "pumped to Tank 2 (P19); Tank 1 is then empty apart from the dead volume below its outlet, so the two tanks are never full at the same time. "
-             "(5) Tank 2 topped up to test level, held 24 hours, inspected; its disinfection relies on the residual chlorine carried over plus a booster dose - "
-             "the walls above the water line are not covered and would need spraying if the Engineer requires it; acceptance rests on the 12-Dec samples, "
-             "re-dosing being the Contractor's risk. (6) The Tank 2 water is dechlorinated in the tank (7.9) on 13-Dec and kept as the first stock into "
-             "service; the integrated commissioning pumps from Tank 2. Tank 1 is demonstrated on its valves and level instruments (checked live during its own "
-             "fill) but not on live pumping; if the Engineer requires a live pumping demonstration from Tank 1 as well, it must be refilled - from the TSE "
-             "network after the tie-in if the Employer confirms a source (no tanker cost), otherwise by tanker (sensitivity S8). Release prerequisite for the "
-             "commissioning: the Tank 2 hydrostatic pass and the Engineer's acceptance of the samples; a laboratory turnaround longer than one working day "
-             "moves P21b day for day (site period sensitivity as S2)."), height=120); r += 1
+para(pg, r, ("Provisional commissioning method, both tanks - for the Contractor's method statement and the Engineer's acceptance; nothing here is verified. "
+             "HYDROSTATIC TEST WATER: (1) Tank 1 filled by tanker to the 3.7 m test level, 3,774 m3 ('Build-Up' 7.1), held 24 hours and inspected (P18). (2) The water is "
+             "pumped to Tank 2 once Tank 2 is complete (P19, 3 days); Tank 1 is then empty apart from the dead volume below its outlet - the two tanks are never full at "
+             "the same time. (3) Tank 2 topped up (7.5), held 24 hours, inspected and sampled (P20). DISINFECTION: the test water is dosed with hypochlorite in Tank 1 "
+             "(7.6, 7.7), circulated and sampled (7.10, 7.11) before the transfer, and boosted in Tank 2 after it; this covers the wetted surfaces only, so the surfaces "
+             "above the test level in both tanks are sprayed separately (7.25) - Tank 2 before it receives water, Tank 1 after it is emptied. FUNCTIONAL COMMISSIONING: "
+             "the component checks follow the tie-in (P21); the integrated demonstration (P21b) needs both tanks connected and holding water, so Tank 2 keeps the test "
+             "water (dechlorinated in the tank, 7.9) and Tank 1 receives an operating fill of about 1,020 m3 by tanker on 09 and 10-Dec (P20b, 7.24), attended within "
+             "the approved helpers. A refill from the network after the tie-in is not assumed: the Employer has confirmed neither a source nor that it is free; a "
+             "demonstration of Tank 1 on its valves and instruments alone is not established as meeting RFP Scope of Works 5.2. RELEASE CONDITIONS: the integrated "
+             "commissioning starts only after the Tank 2 hydrostatic pass, the Engineer's acceptance of the water samples and the tie-in; a laboratory turnaround longer "
+             "than one working day moves P21b day for day. After acceptance the water is kept as first stock if the Employer so instructs, otherwise dechlorinated and "
+             "discharged (7.9). NOT ESTABLISHED: the water source and price, the disinfection method, the depth the Engineer requires in Tank 1 (a full fill is "
+             "sensitivity S8) and the disposal route; until the method statement is accepted, Item 7 is an assessment allowance."), height=170); r += 1
 # --- sensitivity block
 if PG['used'] + 19.5 + 70 > PAGE:
-    pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(32)
+    pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(PG['hdr'])
 pg_add(19.5)
 pg.cell(r, 2, 'Sensitivity - not carried; same durations and dependencies as P18 to P23'); cp(S_TOTLBL, pg.cell(r, 2))
 for c in range(1, 11):
@@ -492,10 +562,10 @@ pg.row_dimensions[r].height = 19.5
 r += 1
 def sens(ref, name, cs, cf, cd, deriv, height=None):
     return add3(ref, name, cs, cf, cd, '-', '-', '-', deriv, 'cd', height)
-b_t1t_f = W(NEXT(f'G{p16}'), 7); b_xf_f = W(NEXT(b_t1t_f), 3); b_t2t_f = W(NEXT(b_xf_f), 4); b_cc_f = W(NEXT(f'G{p16}'), 3)
-b_ic_f = W(NEXT(f'MAX(G{p16},{b_t2t_f},{b_cc_f})'), 3); b_dm_f = W(NEXT(b_ic_f), 7)
+b_t1t_f = W(NEXT(f'G{p16}'), 7); b_xf_f = W(NEXT(b_t1t_f), 3); b_t2t_f = W(NEXT(b_xf_f), 4); b_cc_f = W(NEXT(f'G{p16}'), 3); b_of_f = W(NEXT(b_xf_f), 2)
+b_ic_f = W(NEXT(f'MAX(G{p16},{b_t2t_f},{b_cc_f},{b_of_f})'), 3); b_dm_f = W(NEXT(b_ic_f), 7)
 s2 = sens('S2', 'Carried basis if the Tank 1 test cannot precede the tie-in - Tank 1 test after the tie-in, transfer, Tank 2 test, integrated commissioning, demobilisation (calendar days from mobilisation)', f"=F{p1}", f"={b_dm_f}", f"=D{r}-C{r}+1",
-          "Tank 1 test 09 to 16-Dec-2026; transfer 17 to 20-Dec; Tank 2 test 21 to 24-Dec; component checks 09 to 12-Dec in parallel; integrated commissioning 26 to 28-Dec-2026; demobilisation 29-Dec-2026 to 05-Jan-2027 (Fridays excluded). The additional site days against D1 are shown at S3", 60)
+          "Tank 1 test 09 to 16-Dec-2026; transfer 17 to 20-Dec; Tank 2 test 21 to 24-Dec; component checks 09 to 12-Dec and the Tank 1 operating fill 21 to 22-Dec in parallel; integrated commissioning 26 to 28-Dec-2026; demobilisation 29-Dec-2026 to 05-Jan-2027 (Fridays excluded). The additional site days against D1 are shown at S3", 60)
 s3 = add3('S3', 'S2 - complete incremental amount, excluding Overhead and Profit (first column: additional site days; third column: SAR)', f"=E{s2}-H{d1}", '-', 'SENS_AMT', '-', '-', '-',
           "Every Section 5 line re-evaluated with the S2 dates by its own formula and rounding: the site-period lines and site staff ('Build-Up' 1.1 to 1.8, 1.10, 1.12, 1.13, 5.8 and 5.9) at the S2 days in months; welfare-water deliveries (1.9) at two per rounded-up week; the works generator (5.7) to the S2 end of commissioning. The erection-window, plant, helper, access, container and Item 7 lines do not move because only the testing tail moves. Not carried: it applies only if the Engineer does not accept the early Tank 1 test", 60)
 pg.cell(s3, 3).number_format = '#,##0'; pg.cell(s3, 5).number_format = '#,##0.00'
@@ -506,7 +576,7 @@ SEC3_END = r - 1
 
 # ================================================================ Section 4: resource bridge on the approved histogram
 r += 1
-pg_break(pg, r)
+pg_break_if(pg, r, 21 + 3 * 60 + 83 + 32 + 60)
 pg_add(21 + 3 * 60)
 banner(pg, r, "4. RESOURCE BRIDGE - THE APPROVED MANPOWER HISTOGRAM RECONCILED TO THE PRICED LINES"); r += 1
 para(pg, r, ("Approved baseline. The Contractor's weekly direct-manpower histogram (workbook 'SAMA-D18 -THS-TSE - Cost S-Curves Cash Flow Manpower Histogram.xlsx', "
@@ -519,7 +589,7 @@ para(pg, r, ("Reading the figures. The source sheet gives 'Total', 'Skilled Labo
              "containing 23-Sep-2026; man-days are people multiplied by that count, not a flat 6. Days are counted inclusively (finish minus start plus one) "
              "and months at 30.4 calendar days, rounded to one decimal place."), height=57); r += 1
 para(pg, r, ("Skilled people. The histogram does not say who employs them. They are allocated below to the activities in progress in each week - dismantling "
-             "(Item 3 quotation, recorded scope), tank erection (Item 6, recorded supply-and-install scope), pipework and tie-in (Item 8 supplied-and-installed "
+             "(Item 3 quotation, recorded scope), tank erection (Item 6, supply-and-install scope as described in 'Build-Up' Assumption 9), pipework and tie-in (Item 8 supplied-and-installed "
              "rates) - and none is priced again, because each of those scopes already carries its own labour. Where a week's skilled people could belong to "
              "more than one scope, or to the Contractor's own mobilisation, the allocation is marked unresolved; the cost effect if they prove to be the "
              "Contractor's own people outside those scopes is bounded at S5 ('Build-Up Comparison' tab, Section 7, item 10)."), height=57); r += 1
@@ -533,8 +603,8 @@ para(pg, r, ("Helpers. Every approved helper man-day is priced once at 'Build-Up
 HDRB = ['Ref', 'Week ending (histogram week) - phase', 'Erection activities in progress (XER)', 'Working days in week', 'Approved total', 'Approved skilled', 'Approved helpers', 'Helper man-days (people x days)', "Helper man-days priced at 5.10", 'Skilled people - where already paid; helper duties; adjustment']
 def hdrb(ws, r_):
     header(ws, r_, HDRB[:9]); ws.cell(r_, 10, HDRB[9]); cp(S_HDR, ws.cell(r_, 10))
-pg_break(pg, r)
-hdrb(pg, r); pg_add(32); r += 1
+pg_break_if(pg, r, 32 + 18 * 38 + 2 * 42)   # the weekly histogram table stays on one page
+hdrb(pg, r); pg_add(PG['hdr']); r += 1
 XJ = f"'XER WBS'!$J${XA0}:$J${XA1}"; XK = f"'XER WBS'!$K${XA0}:$K${XA1}"; XC = f"'XER WBS'!$C${XA0}:$C${XA1}"
 HISTW = [
  ('28-Aug', 8, 5, 3, 'Mobilisation; dismantling starts', 'Skilled: mobilisation 22 to 26-Aug then dismantling from 27-Aug - allocation between Contractor mobilisation and the Item 3 crew unresolved. Helpers: site set-up; provisionally priced (S7)'),
@@ -554,14 +624,14 @@ HISTW = [
  ('04-Dec', 7, 4, 3, 'Tank 2 nozzles; readiness milestone 03-Dec', 'Skilled: nozzle fitters (Item 6) and pipework (Item 8) - unresolved, both priced elsewhere. Helpers: nozzle attendance; Tank 1 disinfection'),
  ('11-Dec', 5, 3, 2, 'Tie-in; transfer; Tank 2 test; disinfection', 'Skilled: tie-in fitters within 8.14 and 8.15. Helpers: transfer 05 to 07-Dec and Tank 2 top-up and hold attendance - priced here, so line 7.4 is nil'),
  ('18-Dec', 0, 0, 0, 'Demobilisation (carried basis from 16-Dec)', 'No approved labour: Tank 2 sampling 12-Dec and discharge 16 to 17-Dec (7.8) and commissioning specialists (7.13 to 7.17) priced on their own lines'),
- ('25-Dec', 0, 0, 0, 'Demobilisation ends 23-Dec (carried)', 'No approved labour: demobilisation clean-up is line 1.16'),
+ ('25-Dec', 0, 0, 0, 'Demobilisation ends 23-Dec (assessment allowance)', 'No approved labour: demobilisation clean-up is line 1.16'),
 ]
 b_first = r
 wk_end = _dt.date(2026, 8, 28)
 for i, (lab, tot_, sk, hp, phase, note) in enumerate(HISTW):
     h = max(30, est(note, 52), est(phase, 40))
     if PG['used'] + h > PAGE:
-        pg_break(pg, r); hdrb(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdrb(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(h)
     pg.cell(r, 1, f'W{i + 1}'); cp(S_REF, pg.cell(r, 1))
     pg.cell(r, 2, f'{lab}-2026 - {phase}'); cp(S_DESC, pg.cell(r, 2))
@@ -578,8 +648,8 @@ for i, (lab, tot_, sk, hp, phase, note) in enumerate(HISTW):
 b_last = r - 1
 def btot(label, cells, note, h=None):
     global r
-    if PG['used'] + 19.5 > PAGE:
-        pg_break(pg, r); hdrb(pg, r); r += 1; pg_add(32)
+    if PG['used'] + (h or 42) > PAGE:
+        pg_break(pg, r); hdrb(pg, r); r += 1; pg_add(PG['hdr'])
     pg.cell(r, 2, label); cp(S_TOTLBL, pg.cell(r, 2))
     for c in range(1, 11):
         if c != 2: cp(S_TOTLBL, pg.cell(r, c))
@@ -592,9 +662,10 @@ bt1 = btot('Approved histogram totals (man-weeks) and helper man-days', {5: f"=S
            "221 man-weeks: 136 skilled (within Items 3, 6 and 8 on their recorded scopes, not priced again) and 85 helpers (priced). Man-days use the working days of each week")
 bt2 = btot("Helper man-months at 26 working days - 'Build-Up' line 5.10 quantity (approved man-days plus the departure in the dated check)", {9: f"=ROUND((I{bt1}+DEPARTURE)/26,1)"}, "Conversion for the man-month rate on the 'Build-Up' tab (6-day week); the departure is the shortfall against the approved deployment shown in the dated check")
 # --- helper duties by week against the approved capacity, W13 onwards (man-days per week, overlapping days shown per duty)
-wk = {i + 1: b_first + i for i in range(len(HISTW))}
+wk = {int(str(pg.cell(rr, 1).value)[1:]): rr for rr in range(b_first, b_last + 1) if str(pg.cell(rr, 1).value)[:1] == 'W' and str(pg.cell(rr, 1).value)[1:].isdigit()}
+assert len(wk) == len(HISTW), wk
 r += 1
-pg_break(pg, r)
+pg_break_if(pg, r, 83 + 32 + 3 * 30)
 para(pg, r, ("Dated check. Each helper duty from 14-Nov-2026 to demobilisation is placed on its working days (XER activity dates and the fitted tests, Section 3) "
              "and its man-days are split by histogram week; the last row compares each week's demand with the approved helper man-days of that week. Where a "
              "duty's assessed gang would exceed the approved deployment the approved figure governs and the allocation is reduced, as noted. Days after "
@@ -603,13 +674,13 @@ para(pg, r, ("Dated check. Each helper duty from 14-Nov-2026 to demobilisation i
 HDRD = ['Ref', 'Helper duty and its working days', 'W13 (14 to 20-Nov)', 'W14 (21 to 27-Nov)', 'W15 (28-Nov to 04-Dec)', 'W16 (05 to 10-Dec)', 'After 11-Dec', 'Total man-days', 'Priced at', 'Allocation and basis']
 def hdrd(ws, r_):
     header(ws, r_, HDRD[:9]); ws.cell(r_, 10, HDRD[9]); cp(S_HDR, ws.cell(r_, 10))
-hdrd(pg, r); pg_add(32); r += 1
+hdrd(pg, r); pg_add(PG['hdr']); r += 1
 DUTY = {}
 def dadd(ref, duty, w13, w14, w15, w16, after, priced, basis):
     global r
     hh = max(30, est(duty, 46), est(basis, 52))
     if PG['used'] + hh > PAGE:
-        pg_break(pg, r); hdrd(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdrd(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(hh)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, duty); cp(S_DESC, pg.cell(r, 2))
     for col, v in ((3, w13), (4, w14), (5, w15), (6, w16), (7, after)):
@@ -628,7 +699,10 @@ dadd('H6', 'Tank 1 test water: dosing and circulation 01 to 02-Dec (2 people), c
 dadd('H7', 'Transfer Tank 1 to Tank 2, P19, 05 to 07-Dec - pump and hose attendance', 0, 0, 0, 6, 0, '5.10', "2 people x 3 days; so 'Build-Up' line 7.4 is nil")
 dadd('H8', 'Tank 2 test P20: top-up 08-Dec (1), hold 09-Dec (none), inspection 10-Dec (1), sampling and inspection 12-Dec (2) - 4 working days elapsed (11-Dec is a Friday), 3 attended', 0, 0, 0, 2, 2, '5.10 / 7.8', '08 and 10-Dec within W16; 12-Dec is after the histogram ends and is priced at 7.8')
 dadd('H9', 'Dechlorination of the Tank 2 water on 13-Dec before the pumping demonstration (1 person); the water is then kept in Tank 2 as first stock, not discharged', 0, 0, 0, 0, 1, '7.8', 'After the histogram; chemicals at 7.9. Provisional method, see the water sequence')
+dadd('H11', 'Tank 1 operating fill by tanker, 09 to 10-Dec (P20b) - 1 person attending the tanker discharge while Tank 2 is on its hold', 0, 0, 0, 2, 0, '5.10', "1 person x 2 working days within the approved W16 people (2 a day): 09-Dec with nobody else, 10-Dec with the H8 inspection - see the daily check. Water at 'Build-Up' 7.24")
 dadd('H10', 'Integrated commissioning 13 to 15-Dec (P21b) and demobilisation 16 to 23-Dec (P23)', 0, 0, 0, 0, 0, '7.13 to 7.17; 1.16', 'Specialists only (engineer, technicians, electrician, calibration); demobilisation clean-up 4 x 3 days at 1.16; no helpers')
+if PG['used'] + 200 > PAGE:
+    pg_break(pg, r); hdrd(pg, r); r += 1
 dem = r
 pg.cell(r, 2, 'Demand - helper man-days by week'); cp(S_TOTLBL, pg.cell(r, 2))
 for c in (1, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
@@ -657,13 +731,13 @@ AFTER_CELL = f"G{dem}"
 DEP_CELL = f"H{depr}"
 # --- daily peak-demand check, W13 to W16
 r += 1
-pg_break(pg, r)
+pg_break_if(pg, r, 30 + 32 + 4 * 16)
 HDRY = ['Ref', 'Working day - duties in progress (from the rows above)', 'Helpers needed', 'Approved a day', 'Spare', '', '', '', '', 'Note']
 def hdry(ws, r_):
     header(ws, r_, HDRY[:9]); ws.cell(r_, 10, HDRY[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=6, end_row=r_, end_column=9)
 para(pg, r, ("Daily check. The duties above are placed on their working days; the peak on each day is set against the approved people of that week. A day above the "
              "approved figure is covered by the departure row, not by trimming the duty."), height=30); r += 1
-hdry(pg, r); pg_add(32); r += 1
+hdry(pg, r); pg_add(PG['hdr']); r += 1
 DAILY = [
  ('14-Nov-2026', 'H1 bracing 3', 3, 13, ''), ('15-Nov-2026', 'H1 bracing 3', 3, 13, ''), ('16-Nov-2026', 'H1 bracing 3', 3, 13, ''),
  ('17-Nov-2026', 'H1 bracing 3; H3 fill 2', 5, 13, ''), ('18-Nov-2026', 'H2 roof supports 3; H3 fill 2', 5, 13, ''), ('19-Nov-2026', 'H2 roof supports 3; H3 fill 2', 5, 13, ''),
@@ -672,12 +746,12 @@ DAILY = [
  ('28-Nov-2026', 'H4 roof panels 5; H5 nozzles 1', 6, 15, 'Above the approved 3: departure'), ('29-Nov-2026', 'H4 roof panels 5; H5 nozzles 1', 6, 15, 'Above the approved 3: departure'), ('30-Nov-2026', 'H4 roof panels 5; H5 nozzles 1', 6, 15, 'Above the approved 3: departure'),
  ('01-Dec-2026', 'H5 nozzles 1; H6 dosing 2', 3, 15, ''), ('02-Dec-2026', 'H5 nozzles 1; H6 dosing 2', 3, 15, ''), ('03-Dec-2026', 'H6 sampling 1', 1, 15, ''),
  ('05-Dec-2026', 'H7 transfer 2', 2, 16, ''), ('06-Dec-2026', 'H7 transfer 2', 2, 16, ''), ('07-Dec-2026', 'H7 transfer 2', 2, 16, ''),
- ('08-Dec-2026', 'H8 top-up 1', 1, 16, ''), ('09-Dec-2026', 'Tank 2 hold - none', 0, 16, ''), ('10-Dec-2026', 'H8 inspection 1', 1, 16, ''),
+ ('08-Dec-2026', 'H8 top-up 1', 1, 16, ''), ('09-Dec-2026', 'Tank 2 hold - none; H11 Tank 1 operating fill 1', 1, 16, ''), ('10-Dec-2026', 'H8 inspection 1; H11 Tank 1 operating fill 1', 2, 16, 'Equal to the approved 2: no departure'),
 ]
 d_first = r
 for day, duties, need, wkno, note in DAILY:
     if PG['used'] + 16 > PAGE:
-        pg_break(pg, r); hdry(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdry(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(16)
     pg.cell(r, 1, day[:6]); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, f'{day} - {duties}'); cp(S_DESC, pg.cell(r, 2))
     pg.cell(r, 3, need); numcell(pg.cell(r, 3), '#,##0'); pg.cell(r, 4, f"=G{wk[wkno]}"); numcell(pg.cell(r, 4), '#,##0'); pg.cell(r, 5, f"=D{r}-C{r}"); numcell(pg.cell(r, 5), '#,##0;-#,##0')
@@ -685,6 +759,8 @@ for day, duties, need, wkno, note in DAILY:
     pg.merge_cells(start_row=r, start_column=6, end_row=r, end_column=9)
     pg.cell(r, 10, note); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 16; r += 1
 d_last = r - 1
+if PG['used'] + 30 > PAGE:
+    pg_break(pg, r); hdry(pg, r); r += 1
 pg.cell(r, 2, 'Sum of the daily shortfalls - the departure carried to the weekly table and to 5.10'); cp(S_TOTLBL, pg.cell(r, 2))
 for c in (1, 3, 4, 6, 7, 8, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
 pg.cell(r, 5, f'=-SUMIF(E{d_first}:E{d_last},"<0")'); cp(S_TOTAMT, pg.cell(r, 5)); pg.cell(r, 5).number_format = '#,##0'
@@ -695,17 +771,17 @@ r += 1
 pg.cell(bt2, 9).value = pg.cell(bt2, 9).value.replace('DEPARTURE', DEP_CELL)
 # --- skilled people: allocation by weeks and activities in progress
 r += 1
-pg_break(pg, r)
+pg_break_if(pg, r, 32 + 3 * 30)
 HDRK = ['Ref', 'Skilled people - weeks and activities in progress', 'Weeks', '', 'Man-weeks', 'Allocated to', '', '', '', 'Status of the allocation']
 def hdrk(ws, r_):
     header(ws, r_, HDRK[:9]); ws.cell(r_, 10, HDRK[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=3, end_row=r_, end_column=4); ws.merge_cells(start_row=r_, start_column=6, end_row=r_, end_column=9)
-hdrk(pg, r); pg_add(32); r += 1
+hdrk(pg, r); pg_add(PG['hdr']); r += 1
 SK = {}
 def kadd(ref, grp, weeks, mw, alloc, status):
     global r
     hh = max(30, est(grp, 46), est(alloc, 52), est(status, 52))
     if PG['used'] + hh > PAGE:
-        pg_break(pg, r); hdrk(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdrk(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(hh)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, grp); cp(S_DESC, pg.cell(r, 2))
     pg.cell(r, 3, weeks); cp(S_UNIT, pg.cell(r, 3)); cp(S_UNIT, pg.cell(r, 4)); pg.merge_cells(start_row=r, start_column=3, end_row=r, end_column=4)
@@ -717,7 +793,7 @@ def kadd(ref, grp, weeks, mw, alloc, status):
     pg.row_dimensions[r].height = hh; SK[ref] = r; r += 1
 kadd('K1', 'Mobilisation (22 to 26-Aug) and dismantling start (27-Aug)', 'W1', f"=F{wk[1]}", "Contractor's mobilisation riggers, or the Item 3 dismantling crew", 'Unresolved - split unknown; if Contractor\'s own mobilisation labour, it is not in any priced line (S5 bounds it)')
 kadd('K2', 'Dismantling in progress (QCD18TSECONDSM1020 to 1030)', 'W2 to W3', f"=F{wk[2]}+F{wk[3]}", 'Dismantling crew within the Al Mousa quotation S04647 (Item 3, recorded scope)', 'Provisional on the recorded scope; the quotation is not attached')
-kadd('K3', 'Tank 1 erection only (QCD18TSECONT1INS1020 to 1060)', 'W4 to W9', f"=SUM(F{wk[4]}:F{wk[9]})", "Tank erection crew within the supplier's supply-and-install price (Item 6, recorded scope)", 'Provisional on the recorded scope; the offer is not attached')
+kadd('K3', 'Tank 1 erection only (QCD18TSECONT1INS1020 to 1060)', 'W4 to W9', f"=SUM(F{wk[4]}:F{wk[9]})", "Tank erection crew within the supplier's supply-and-install price (Item 6)", "On the supplier scope as described ('Build-Up' Assumption 9): the supplier installs, so its crew is within Item 6; provisional until the Al Mousa offer is produced")
 kadd('K4', 'Two erection fronts (Tank 1 bracing, roof; Tank 2 base, walls, bracing)', 'W10 to W11', f"=F{wk[10]}+F{wk[11]}", 'Two erection crews within Item 6', 'As K3')
 kadd('K5', 'Erection, mechanical works and pipework installation overlapping (QCD18TSECONT1MW2055 from 12-Nov; QCD18TSECONT2MW2020)', 'W12 to W15', f"=SUM(F{wk[12]}:F{wk[15]})", 'Erection crews (Item 6) and pipework fitters (Item 8 supplied-and-installed rates)', 'Split between Items 6 and 8 unresolved; both scopes carry their own labour, so no separate price either way')
 kadd('K6', 'Tie-in, transfer and tests (QCD18TSECONTC2040, P19, P20)', 'W16', f"=F{wk[16]}", 'Tie-in fitters within 8.14 and 8.15; test supervision within Item 6', 'As K5')
@@ -729,13 +805,13 @@ if PG['used'] + 32 + 4 * 45 > PAGE:
 HDRP = ['Ref', 'Plant and basis', 'From (XER)', 'To (XER)', 'Working days', 'Hire days carried', '', '', '', 'Derivation from the XER activities; priced item']
 def hdrp(ws, r_):
     header(ws, r_, HDRP[:9]); ws.cell(r_, 10, HDRP[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=7, end_row=r_, end_column=9)
-hdrp(pg, r); pg_add(32); r += 1
+hdrp(pg, r); pg_add(PG['hdr']); r += 1
 PL = {}
 def padd(ref, name, frm, to, wd, hire, note, h=None):
     global r
     hh = max(30, est(name, 46), est(note, 52), h or 0)
     if PG['used'] + hh > PAGE:
-        pg_break(pg, r); hdrp(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdrp(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(hh)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, name); cp(S_DESC, pg.cell(r, 2))
     for col, v in ((3, frm), (4, to)):
@@ -768,13 +844,13 @@ pbt = padd('B5', "Boom truck hire days carried - 'Build-Up' line 5.1", '-', '-',
 if PG['used'] + 32 + 5 * 40 > PAGE:
     pg_break(pg, r)
 HDRR = ['Ref', 'Site staff role and phase duties', 'From', 'To', 'Calendar days', 'Months', '', '', '', 'Coverage and source; priced item']
-header(pg, r, HDRR[:9]); pg.cell(r, 10, HDRR[9]); cp(S_HDR, pg.cell(r, 10)); pg.merge_cells(start_row=r, start_column=7, end_row=r, end_column=9); pg_add(32); r += 1
+header(pg, r, HDRR[:9]); pg.cell(r, 10, HDRR[9]); cp(S_HDR, pg.cell(r, 10)); pg.merge_cells(start_row=r, start_column=7, end_row=r, end_column=9); pg_add(PG['hdr']); r += 1
 ROLE = {}
 def radd(ref, role, frm, to, src):
     global r
     h = max(30, est(role, 46), est(src, 52))
     if PG['used'] + h > PAGE:
-        pg_break(pg, r); header(pg, r, HDRR[:9]); pg.cell(r, 10, HDRR[9]); cp(S_HDR, pg.cell(r, 10)); r += 1; pg_add(32)
+        pg_break(pg, r); header(pg, r, HDRR[:9]); pg.cell(r, 10, HDRR[9]); cp(S_HDR, pg.cell(r, 10)); r += 1; pg_add(PG['hdr'])
     pg_add(h)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, role); cp(S_DESC, pg.cell(r, 2))
     pg.cell(r, 3, frm); datecell(pg.cell(r, 3)); pg.cell(r, 4, to); datecell(pg.cell(r, 4))
@@ -802,10 +878,11 @@ r += 1
 if PG['used'] + 21 + 44 + 32 + 60 > PAGE:
     pg_break(pg, r)
 pg_add(21 + 44 + 32)
-banner(pg, r, "5. 'BUILD-UP' LINES WHOSE QUANTITY IS TAKEN FROM THIS TAB - THE PROGRAMME AS SUBMITTED BESIDE THE BASIS CARRIED"); r += 1
-para(pg, r, ("Rates are those on the 'Build-Up' tab. The carried quantity (column G) is the one the 'Build-Up' tab uses. 'As submitted' (column F) gives the "
-             "same rate on the programme exactly as submitted - parallel testing, every submitted day paid, the histogram helpers - for comparison only. Lines not "
-             "listed are unchanged from Rev 01 because the programme does not affect them; their basis is on the 'Build-Up' tab."), height=44); r += 1
+banner(pg, r, "5. QUANTITIES TAKEN FROM THE PROGRAMME - THE FIGURES USED ON THE 'BUILD-UP' TAB, WITH THE SUBMITTED PROGRAMME FOR COMPARISON"); r += 1
+para(pg, r, ("How to read this table: the yellow-bordered column G is the quantity used on the 'Build-Up' tab (click a reference in column A to open that line). "
+             "The grey columns are for comparison only: the Rev 01 quantity and what the same line would be on the programme exactly as submitted (parallel testing, "
+             "every submitted day paid). Column J says which programme window or resource row the quantity is built from - click the figure in column G to open it. "
+             "Lines not listed are unchanged from Rev 01 because the programme does not affect them."), height=58); r += 1
 hdr4(pg, r)
 HDR4ROW = r; r += 1
 
@@ -843,10 +920,11 @@ L('7.1', 100, "=2*3774", "=3774", "As submitted: both tanks filled at once for p
 L('7.2', 101, "=0", f"=H{p19}+H{p20}", "Transfer pump: not needed as submitted; carried for the transfer P19 and the Tank 2 test P20 (top-up and hold)")
 L('7.3', 102, "=0", "=1", "Transfer hoses: not needed as submitted; 1 week carried")
 L('7.4', 103, "=0", "=0", "Nil as submitted and carried: the transfer labour is within the approved histogram helpers priced at 5.10 (Section 4, week W16)")
-L('7.5', 104, "=ROUND(2*3774*0.1,0)", "=ROUND(3774*0.1,0)", "Top-up at 10 per cent of the water filled: of two fills on A, of one fill as carried (retention in Tank 1 between P18 and P19)")
+L('7.5', 104, "=ROUND(2*3774*0.1,0)", "=ROUND(3774*0.1,0)", "Top-up at 10 per cent of the water filled: of two fills on the submitted programme, of one fill in the assessment allowance (retention in Tank 1 between P18 and P19)")
 L('7.13', 112, f"=E{p17}+1", f"=H{p21}+H{p21b}+2", "As submitted: the programmed 7-working-day parallel testing and commissioning activity plus one day at the hold. Carried: component checks P21 (3 days) and integrated commissioning P21b (3 days), both assessed assumptions, plus one day at each hydrostatic test hold; the fills and holds themselves are supervised by the QA/QC inspector (line 1.3) and the supplier's leak-test supervision within Item 6")
-L('7.14', 113, f"=2*E{p17}", f"=2*(H{p21}+H{p21b})", "2 No. technicians: as submitted for the 7-day programmed activity; carried for the component checks P21 and the integrated commissioning P21b (6 days)")
+L('7.14', 113, f"=2*E{p17}", f"=2*(H{p21}+H{p21b})", "2 No. technicians: as submitted for the 7-day programmed activity; allowed for the component checks P21 and the integrated commissioning P21b (6 days)")
 L('7.16', 115, f"=E{p16}+1", f"=H{p16}+1", "Tie-in P16 working days plus one day of integrated commissioning, both bases")
+L('7.24', 123, "=0", "=34*30*1", "Assessment allowance: 34 m x 30 m x 1.0 m operating depth in Tank 1 for the commissioning demonstration, tankered on 09 and 10-Dec-2026 (window P20b). Nil on the submitted programme, which fills both tanks in full for parallel testing")
 L('7.22', 121, "=4", "=4", "Pump and hose set standing by through the two 24-hour holds and two days of contingency between the Tank 1 test and the transfer; tankers are working, not standing by, during the fill. The same on A, where two simultaneous fills need the same standby")
 
 first4 = r
@@ -857,7 +935,7 @@ for ref, burow, qA, qB, deriv, prev in LINES:
         item_rows[item] = []
     h4 = max(30, est(deriv, 52), est(str(bu.cell(burow, 2).value), 46))
     if PG['used'] + h4 > PAGE:
-        pg_break(pg, r); hdr4(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdr4(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(h4)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1))
     pg.cell(r, 2, f"='Build-Up'!B{burow}"); cp(S_DESC, pg.cell(r, 2))
@@ -878,7 +956,7 @@ for ref, burow, qA, qB, deriv, prev in LINES:
     r += 1
 last4 = r - 1
 if PG['used'] + 4 * 19.5 + 30 > PAGE:
-    pg_break(pg, r); hdr4(pg, r); r += 1; pg_add(32)
+    pg_break(pg, r); hdr4(pg, r); r += 1; pg_add(PG['hdr'])
 # sensitivity S3 amount
 d1_rows = [rr for rr in range(first4, last4 + 1) if pg.cell(rr, 1).value in ('1.1', '1.2', '1.4', '1.6', '1.7', '1.8', '1.10', '1.12', '1.13', '5.8', '5.9', '5.7', '1.3', '1.5')]
 dl_row = [rr for rr in range(first4, last4 + 1) if pg.cell(rr, 1).value == '1.9'][0]
@@ -892,6 +970,8 @@ pg.cell(s3, 5).value = ('=' + '+'.join(f"D{rr}*(ROUND({_days(rr)}/{MON},1)-G{rr}
                         + f"+D{dl_row}*(2*ROUNDUP((H{d1}+C{s3})/7,0)-G{dl_row})")
 cp(S_AMT, pg.cell(s3, 5)); pg.cell(s3, 5).number_format = '#,##0.00'
 sub = {}
+if PG['used'] + 5 * 30 > PAGE:
+    pg_break(pg, r); hdr4(pg, r); r += 1
 for item, label in (('1', 'Item 1 - lines listed above'), ('5', 'Item 5 - lines listed above'), ('7', 'Item 7 - lines listed above')):
     rows_ = item_rows[item]
     pg.cell(r, 2, label); cp(S_TOTLBL, pg.cell(r, 2))
@@ -916,13 +996,15 @@ pg.cell(r, 10, "Carried = the 'Assessment' tab total (row 21). 'As submitted' sw
 pg.row_dimensions[r].height = 30
 TOT4 = r; r += 1
 for c in (1, 3, 4, 5, 6, 7, 10): pass
+if PG['used'] + 19.5 + 4 * 68 > PAGE:
+    pg_break(pg, r); hdr4(pg, r); r += 1
 pg.cell(r, 2, "Sensitivities on the resource matrix - not carried"); cp(S_TOTLBL, pg.cell(r, 2))
 for c in (1, 3, 4, 5, 6, 7, 8, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
 pg.row_dimensions[r].height = 19.5; r += 1
 pg.cell(r, 1, 'S5'); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, "Upper bound if all 136 approved skilled man-weeks were the Contractor's own people outside the recorded Item 3, 6 and 8 scopes (gross labour, before any re-basing of Item 6 to a supply-only price)"); cp(S_DESC, pg.cell(r, 2))
 pg.cell(r, 3, 'man-day'); cp(S_UNIT, pg.cell(r, 3)); pg.cell(r, 4, "='Build-Up'!E50"); cp(S_RATE, pg.cell(r, 4))
 pg.cell(r, 7, f"=E{btk}*6"); numcell(pg.cell(r, 7), '#,##0.00'); pg.cell(r, 9, f"=ROUND(G{r}*D{r},2)"); cp(S_AMT, pg.cell(r, 9))
-pg.cell(r, 10, "At the rigger day rate assessed at 'Build-Up' c.2; a bound only, not carried: the Contractor's answer to 'Build-Up Comparison' Section 7, item 10 decides, and Item 6 would fall if it is supply only"); cp(S_BASIS, pg.cell(r, 10))
+pg.cell(r, 10, "At the rigger day rate assessed at 'Build-Up' c.2; a bound only, not carried: the Contractor's answer to 'Build-Up Comparison' Section 7, item 10 decides, and Item 6 would fall if the supplier's price proved to be supply only, contrary to the scope described in 'Build-Up' Assumption 9"); cp(S_BASIS, pg.cell(r, 10))
 for c in (5, 6, 8): cp(S_QTY, pg.cell(r, c)); pg.cell(r, c).value = '-'
 pg.row_dimensions[r].height = 44; r += 1
 pg.cell(r, 1, 'S7'); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, "Reduction if the helpers approved in the dismantling weeks W1 to W3 (13 man-weeks) prove to be within the Item 3 dismantling crew rather than the Contractor's own attendance"); cp(S_DESC, pg.cell(r, 2))
@@ -931,10 +1013,10 @@ pg.cell(r, 7, f"=-ROUND((H{wk[1]}+H{wk[2]}+H{wk[3]})/26,1)"); numcell(pg.cell(r,
 pg.cell(r, 10, "Excluding Overhead and Profit; not carried. Those helpers are priced provisionally at 5.10 because the approved histogram lists them as the Contractor's direct manpower; the Al Mousa quotation scope (not attached) decides"); cp(S_BASIS, pg.cell(r, 10))
 for c in (5, 6, 8): cp(S_QTY, pg.cell(r, c)); pg.cell(r, c).value = '-'
 pg.row_dimensions[r].height = 44; r += 1
-pg.cell(r, 1, 'S8'); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, "Second fill of Tank 1 by tanker with two days of standby, if the Engineer requires a live pumping demonstration from Tank 1 and no network source is available"); cp(S_DESC, pg.cell(r, 2))
+pg.cell(r, 1, 'S8'); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, "Tank 1 filled to the full 3.7 m test level for the commissioning instead of the 1 m operating fill at 7.24 (2,754 m3 more by tanker, two further attended days), if the Engineer requires it and no network source is confirmed"); cp(S_DESC, pg.cell(r, 2))
 pg.cell(r, 3, 'm3'); cp(S_UNIT, pg.cell(r, 3)); pg.cell(r, 4, "='Build-Up'!E100"); cp(S_RATE, pg.cell(r, 4))
-pg.cell(r, 7, "='Build-Up'!D100"); numcell(pg.cell(r, 7), '#,##0.00'); pg.cell(r, 9, f"=ROUND(G{r}*D{r},2)+2*'Build-Up'!E121"); cp(S_AMT, pg.cell(r, 9))
-pg.cell(r, 10, "Excluding Overhead and Profit; not carried. The water sequence in Section 3 explains why Tank 1 is empty at commissioning"); cp(S_BASIS, pg.cell(r, 10))
+pg.cell(r, 7, "='Build-Up'!D100-'Build-Up'!D123"); numcell(pg.cell(r, 7), '#,##0.00'); pg.cell(r, 9, f"=ROUND(G{r}*D{r},2)+2*'Build-Up'!E121"); cp(S_AMT, pg.cell(r, 9))
+pg.cell(r, 10, "Excluding Overhead and Profit; not included in the assessment. The provisional commissioning method in Section 3 explains the 1 m operating fill and why Tank 1 is otherwise empty at commissioning"); cp(S_BASIS, pg.cell(r, 10))
 for c in (5, 6, 8): cp(S_QTY, pg.cell(r, c)); pg.cell(r, c).value = '-'
 pg.row_dimensions[r].height = 44; r += 1
 pg.cell(r, 1, 'S6'); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, 'A second telehandler for the 11 concurrent days (Tank 1 roof with Tank 2 walls, 29-Oct to 11-Nov-2026), if one unit proves insufficient'); cp(S_DESC, pg.cell(r, 2))
@@ -988,12 +1070,12 @@ REG = [
  ('5.9', 82, SITE, 'Site pick-up; Contractor', 'Hire: monthly, site period', 'No - workforce bus is 1.12; plant is 5.1 and 5.2'),
  ('5.10', 83, 'Section 4 weekly bridge W1 to W16 (approved histogram)', "Contractor's helpers for every approved week: mobilisation, dismantling attendance, offloading, panel handling, transfer and disinfection", 'Attendance: approved helper man-days converted to man-months', 'No - erectors within Item 6; 7.4 nil; 7.8 Tank 2 only; clean-up 1.16'),
  ('5.11', 84, 'QCD18TSECONT1INS1020 to QCD18TSECONT2MW2020 (window D3)', "Power tools for the Contractor's own works; Contractor", 'Hire: monthly, erection window', "No - the supplier's erection tools are within Item 6"),
- ('5.12', 85, 'Within Item 6 on its recorded scope (RFP work package 2)', 'Sealant application - supplier erection work', 'Provisionally not assessed', 'Yes - Item 6, to confirm'),
- ('5.13', 86, 'Within Item 6 on its recorded scope', 'Fixings and touch-up - supplier supply and erection', 'Provisionally not assessed', 'Yes - Item 6, to confirm'),
+ ('5.12', 85, 'Within Item 6 on the described scope (MNT-AY-486 item 6; Assumption 9)', 'Sealant supplied and applied by the supplier', 'Nil', 'Yes - in Item 6'),
+ ('5.13', 86, 'QCD18TSEPRC1120 to QCD18TSECONT2INS1050 (storage window D7)', 'Storage and handling consumables; Contractor - the supplier excludes storage and shifting (Assumption 9)', 'Quantity: 2 tanks', 'No - fixings are in Item 6; containers 1.11; plant 5.1 and 5.2'),
  ('5.14', 87, 'Window D3', 'Lighting towers for the erection fronts and the work area at dusk; Contractor', 'Hire: 2 No., monthly, erection window', 'No'),
  ('5.15', 88, 'Site service - power distribution from 5.7 and 5.8', 'Distribution boards and cabling; Contractor', 'Quantity: 2 sets', 'No'),
- ('6.1', 94, 'QCD18TSEPRC1060 to QCD18TSEPRC1230, QCD18TSECONT1INS1020 to QCD18TSECONT2MW2030', 'Design, manufacture, delivery duty paid, erection, sealing, bracing, nozzles and internals of both tanks; Al Mousa / Stalwart', 'Fixed: quotation per tank, insulated, provisional; erection scope as recorded, offer not attached', 'No - the Contractor provides offloading, scaffold, storage, power and helpers (Items 1 and 5)'),
- ('7.1', 100, 'P18 (17 to 24-Nov-2026 carried)', 'Tankered water for the first fill; Contractor', 'Quantity: 3,774 m3, one fill', 'No'),
+ ('6.1', 94, 'QCD18TSEPRC1060 to QCD18TSEPRC1230, QCD18TSECONT1INS1020 to QCD18TSECONT2MW2030', 'Design, manufacture, delivery duty paid, erection, sealing, bracing, nozzles and internals of both tanks; Al Mousa / Stalwart', 'Fixed: quotation per tank, insulated, provisional; supply-and-install scope as described (Assumption 9)', 'No - the Contractor provides helpers, unloading, storage, plant, scaffold and power (Items 1 and 5)'),
+ ('7.1', 100, 'P18 (17 to 24-Nov-2026, assessment allowance)', 'Tankered water for the first fill; Contractor', 'Quantity: 3,774 m3, one fill', 'No'),
  ('7.2', 101, 'P19 and P20', 'Transfer pump; Contractor', 'Hire: transfer plus test days', 'No'),
  ('7.3', 102, 'P19', 'Transfer hoses and fittings; Contractor', 'Hire: 1 week', 'No'),
  ('7.4', 103, 'P19 - within the approved histogram week W16', 'Pump attendance during the transfer; Contractor helpers', 'Nil - priced at 5.10', 'Yes - 5.10'),
@@ -1016,28 +1098,30 @@ REG = [
  ('7.21', 120, 'QCD18TSEDMOB3020', 'As-built mark-ups; Contractor draughtsman', 'Attendance: 0.5 month', 'No - shop drawings are 2.2'),
  ('7.22', 121, 'P18 and P20 holds', 'Pump and hose set standing by through the holds; Contractor', 'Hire: 4 days', 'No - tankers are paid at 7.1'),
  ('7.23', 122, 'Deliverables list 26 to 28-Sep-2026 (PQD, ITP, procedure, inspector CV)', 'Third-party factory acceptance test - not required by the RFP', 'Nil pending evidence', 'Manufacturer test reports are within Item 6'),
- ('8.1', 129, 'QCD18TSEPRC1160 to 1250 (procurement), QCD18TSECONT1MW2055 and QCD18TSECONT2MW2020 (installation)', 'Main pipework above DN150 to the RFP specification, supplied and installed; Contractor', 'Quantity: 200 m assessed, take-off pending', 'No'),
- ('8.2', 130, 'As 8.1', 'Small-bore uPVC pipework; Contractor', 'Quantity: 60 m assessed', 'No'),
- ('8.3', 131, 'As 8.1', 'Butterfly isolation valves to the RFP; Contractor', 'Quantity: 10 No. assessed', 'No'),
- ('8.4', 132, 'As 8.1', 'Dismantling joints; Contractor', 'Quantity: 4 No.', 'No'),
- ('8.5', 133, 'QCD18TSECONT1MW2050 and QCD18TSECONT2MW2030', 'Blind flanges on spare nozzles; Contractor', 'Quantity: 8 No.', "No - the nozzles themselves are the supplier's"),
- ('8.6', 134, 'As 8.1', 'Flange sets, gaskets and bolting; Contractor', 'Quantity: 2 tank-sets', 'No'),
- ('8.7', 135, 'As 8.1', 'Pipe supports; Contractor', 'Quantity: 40 No.', 'No'),
- ('8.8', 136, 'As 8.1', 'Anchor and thrust blocks; Contractor', 'Quantity: 8 No.', 'No'),
- ('8.9', 137, 'QCD18TSECONT1MW2060 and QCD18TSECONT2MW2040', 'Float-and-tape level indicators; Contractor', 'Quantity: 2 No.', "No - excluded from the tank supply"),
- ('8.10', 138, 'As 8.9', 'Level transmitters; Contractor', 'Quantity: 2 No.', 'No'),
- ('8.11', 139, 'As 8.9', 'Instrument cabling and conduit; Contractor', 'Quantity: 160 m assessed', 'No - connection checks are 7.15'),
- ('8.12', 140, 'QCD18TSECONTC2040', 'Pressure gauge assemblies; Contractor', 'Quantity: 2 sets', 'No'),
- ('8.13', 141, 'QCD18TSECONTC2040', 'Sample taps; Contractor', 'Quantity: 2 No.', 'No'),
- ('8.14', 142, 'QCD18TSECONTC2040 after QCD18TSECONIF2050 (03-Dec-2026)', 'Tie-ins to the networks after the external readiness milestone; Contractor', 'Quantity: 2 No.', 'No'),
- ('8.15', 143, 'QCD18TSECONTC2040', 'Tie-in coordination and out-of-hours working; Contractor', 'Quantity: 2 No.', 'No - the coordination engineer at 7.16 is the Contractor\'s attendance at the demonstration'),
- ('8.16', 144, 'After QCD18TSECONT2MW2020, before P21', 'Pipework test pump and manifold; Contractor', 'Hire: 2 weeks', 'No - tank testing is Item 7'),
- ('8.17', 145, 'As 8.16', 'Pipework test and flushing water; Contractor', 'Quantity: 300 m3', 'No'),
- ('8.18', 146, 'As 8.16', 'Pipework testing crew; Contractor', 'Attendance: 2 No. x 12 days', 'No - not in 5.10 (matrix M14)'),
- ('8.19', 147, 'As 8.16', 'Test records and certificates; Contractor', 'Quantity: 2 systems', 'No'),
- ('8.20', 148, 'As 8.1', 'Colour banding; Contractor', 'Quantity: 260 m', 'No'),
- ('8.21', 149, 'As 8.1', 'Tags, arrows and labels; Contractor', 'Quantity: 70 No.', 'No'),
- ('a.1 to a.5', 152, "The Contractor's procured materials - information only", 'Not carried', 'Not carried', 'Not carried'),
+ ('7.24', 123, 'P20b (09 to 10-Dec-2026), after P19 and P16', 'Tankered operating water in Tank 1 for the pumping demonstration; Contractor', 'Quantity: 1,020 m3 (1 m depth), Section 5', 'No - the first fill is 7.1; attendance is within 5.10 (duty H11)'),
+ ('7.25', 124, 'Tank 2 on 03 and 05-Dec (before P19), Tank 1 on 08-Dec (after P19)', 'Spray disinfection of the surfaces above the test water line; specialist crew within the rate', 'Quantity: 2 tanks', 'No - the chlorinated water at 7.6 and 7.7 covers only the wetted surfaces'),
+ ('8.1', 131, 'QCD18TSEPRC1160 to 1250 (procurement), QCD18TSECONT1MW2055 and QCD18TSECONT2MW2020 (installation)', 'Main pipework above DN150 to the RFP specification, supplied and installed; Contractor', 'Quantity: 200 m assessed, take-off pending', 'No'),
+ ('8.2', 132, 'As 8.1', 'Small-bore uPVC pipework; Contractor', 'Quantity: 60 m assessed', 'No'),
+ ('8.3', 133, 'As 8.1', 'Butterfly isolation valves to the RFP; Contractor', 'Quantity: 10 No. assessed', 'No'),
+ ('8.4', 134, 'As 8.1', 'Dismantling joints; Contractor', 'Quantity: 4 No.', 'No'),
+ ('8.5', 135, 'QCD18TSECONT1MW2050 and QCD18TSECONT2MW2030', 'Blind flanges on spare nozzles; Contractor', 'Quantity: 8 No.', "No - the nozzles themselves are the supplier's"),
+ ('8.6', 136, 'As 8.1', 'Flange sets, gaskets and bolting; Contractor', 'Quantity: 2 tank-sets', 'No'),
+ ('8.7', 137, 'As 8.1', 'Pipe supports; Contractor', 'Quantity: 40 No.', 'No'),
+ ('8.8', 138, 'As 8.1', 'Anchor and thrust blocks; Contractor', 'Quantity: 8 No.', 'No'),
+ ('8.9', 139, 'QCD18TSECONT1MW2060 and QCD18TSECONT2MW2040', 'Float-and-tape level indicators; Contractor', 'Quantity: 2 No.', "No - the supplier includes only a tube-type indicator (MNT-AY-486 item 5); the RFP float-and-tape unit with local readout is priced here"),
+ ('8.10', 140, 'As 8.9', 'Level transmitters; Contractor', 'Quantity: 2 No.', 'No'),
+ ('8.11', 141, 'As 8.9', 'Instrument cabling and conduit; Contractor', 'Quantity: 160 m assessed', 'No - connection checks are 7.15'),
+ ('8.12', 142, 'QCD18TSECONTC2040', 'Pressure gauge assemblies; Contractor', 'Quantity: 2 sets', 'No'),
+ ('8.13', 143, 'QCD18TSECONTC2040', 'Sample taps; Contractor', 'Quantity: 2 No.', 'No'),
+ ('8.14', 144, 'QCD18TSECONTC2040 after QCD18TSECONIF2050 (03-Dec-2026)', 'Tie-ins to the networks after the external readiness milestone; Contractor', 'Quantity: 2 No.', 'No'),
+ ('8.15', 145, 'QCD18TSECONTC2040', 'Tie-in coordination and out-of-hours working; Contractor', 'Quantity: 2 No.', 'No - the coordination engineer at 7.16 is the Contractor\'s attendance at the demonstration'),
+ ('8.16', 146, 'After QCD18TSECONT2MW2020, before P21', 'Pipework test pump and manifold; Contractor', 'Hire: 2 weeks', 'No - tank testing is Item 7'),
+ ('8.17', 147, 'As 8.16', 'Pipework test and flushing water; Contractor', 'Quantity: 300 m3', 'No'),
+ ('8.18', 148, 'As 8.16', 'Pipework testing crew; Contractor', 'Attendance: 2 No. x 12 days', 'No - not in 5.10 (matrix M14)'),
+ ('8.19', 149, 'As 8.16', 'Test records and certificates; Contractor', 'Quantity: 2 systems', 'No'),
+ ('8.20', 150, 'As 8.1', 'Colour banding; Contractor', 'Quantity: 260 m', 'No'),
+ ('8.21', 151, 'As 8.1', 'Tags, arrows and labels; Contractor', 'Quantity: 70 No.', 'No'),
+ ('a.1 to a.5', 154, "The Contractor's procured materials - information only", 'Not carried', 'Not carried', 'Not carried'),
 ]
 r += 1
 pg_break(pg, r)
@@ -1054,9 +1138,9 @@ def hdrg(ws, r_):
 hdrg(pg, r); r += 1
 g_first = r
 for ref, burow, wbs, what, basis, elsewhere in REG:
-    h = max(30, est(wbs, 24), est(what, 34), est(basis, 26), est(elsewhere, 14), est(str(bu.cell(burow, 2).value), 46))
+    h = max(30, est(wbs, 24), est(what, 23), est(basis, 34), est(elsewhere, 14), est(str(bu.cell(burow, 2).value), 46))
     if PG['used'] + h > PAGE:
-        pg_break(pg, r); hdrg(pg, r); r += 1; pg_add(32)
+        pg_break(pg, r); hdrg(pg, r); r += 1; pg_add(PG['hdr'])
     pg_add(h)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1))
     pg.cell(r, 2, f"='Build-Up'!B{burow}" if '.' in ref and ' to ' not in ref else str(bu.cell(burow, 2).value)); cp(S_DESC, pg.cell(r, 2))
@@ -1069,6 +1153,8 @@ for ref, burow, wbs, what, basis, elsewhere in REG:
     pg.row_dimensions[r].height = h
     r += 1
 g_last = r - 1
+if PG['used'] + 55 > PAGE:
+    pg_break(pg, r); hdrg(pg, r); r += 1
 pg.cell(r, 2, "Total of the priced lines above, before Overhead and Profit"); cp(S_TOTLBL, pg.cell(r, 2))
 for c in (1, 3, 4, 5, 6, 7, 8, 9): cp(S_TOTLBL, pg.cell(r, c))
 pg.cell(r, 10, f"=SUM(J{g_first}:J{g_last})+'Build-Up'!F94"); cp(S_TOTAMT, pg.cell(r, 10))
@@ -1118,9 +1204,9 @@ gset(30, "3 days after demobilisation: the Engineer's completion inspection, the
 bu['B30'] = "Close-out at the tank site after demobilisation - completion inspection, correction list and warranties collation - site engineer"
 gset(37, "2 months retained: the programme shows shop drawings 07 to 25-Aug-2026 (activities QCD18TSEENG1240 and 1250) with resubmissions to 29-Sep-2026 and the pipework shop drawings still in preparation, consistent with the period assessed. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 gset(38, "1.5 months retained on the same programme evidence as 2.1. As-built drawings at close-out are line 7.21. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-bu['A72'] = ("What Item 5 pays for: what the tank supplier's offer (Al Mousa S04488 with Stalwart SS-07-26-1516) asks the Contractor to provide - offloading and "
-             "lifting, scaffold, storage and handling, power, 4 to 6 helpers - plus general site plant. Erection itself is in the supplier's price (Item 6), as "
-             "recorded in Rev 01; the offer is not attached and is to be checked. Helpers: the approved manpower histogram's helper row, priced once ('Programme' "
+bu['A72'] = ("What Item 5 pays for: what the tank supplier excludes and the Contractor must provide - helpers and labourers, unloading and shifting of the "
+             "materials, storage and handling, forklift, crane and scaffolding, and power for the installation (supplier scope as described, Assumption 9 below) - "
+             "plus general site plant. Erection itself, with the sealant and the fixings, is in the supplier's supply-and-install price (Item 6). Helpers: the approved manpower histogram's helper row, priced once ('Programme' "
              "tab, Section 4). Plant days: counted from the programme activity dates on the same tab; one boom truck and one telehandler is an assumption pending "
              "the Contractor's plant schedule. Power: the works generator by day until commissioning ends, the welfare generator around the clock until "
              "demobilisation ends - no site power is available (Engineer's email of 30-Aug-2026, which also notes the Contractor's method uses forklifts, cranes "
@@ -1137,21 +1223,29 @@ gset(80, f"Works period D2 on the '{SRC_A}, to completion of commissioning. Powe
 gset(81, f"Site period D1 on the '{SRC_A}; air conditioning and lighting run around the clock at a separate site. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 gset(82, f"Site period D1 on the '{SRC_A}. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 bu['B83'] = "Contractor's helpers - the approved manpower histogram helper row (85 man-weeks), man-months"
-gset(83, "The approved manpower histogram's helper row, 85 man-weeks, as reproduced week by week on the 'Programme' tab, Section 4, converted to man-days on each week's working days and to man-months at 26 working days; every helper man-day priced once here, so the transfer labour 7.4 is nil and 7.8 carries only the Tank 2 disinfection after the histogram ends. The dismantling-week helpers are priced provisionally (S7). Skilled people are within Items 3, 6 and 8 on their recorded scopes and are not priced. The Contractor's histogram helper row (85 man-weeks) is reconciled week by week there; it is not adopted. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-gset(84, f"Erection window D3 on the '{SRC_A}. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+gset(83, "The approved manpower histogram's helper row, 85 man-weeks, as reproduced week by week on the 'Programme' tab, Section 4, converted to man-days on each week's working days and to man-months at 26 working days; every helper man-day priced once here, so the transfer labour 7.4 is nil and 7.8 carries only the Tank 2 disinfection after the histogram ends. The dismantling-week helpers are priced provisionally (S7). Skilled people are within Items 3, 6 and 8 on their recorded or described scopes ('Build-Up' Assumption 9) and are not priced. The Contractor's histogram helper row (85 man-weeks) is reconciled week by week there; it is not adopted. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+bu['B84'] = "Power and hand tools, slings and lifting tackle for the Contractor's helpers - unloading, shifting and attendance"
+gset(84, f"The supplier installs with its own erection tools (Assumption 9); the Contractor's helpers need their own tools and tackle for the unloading and shifting the supplier excludes. Erection window D3 on the '{SRC_A}. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 bu['B87'] = 'Mobile lighting towers, 2 No. for the erection window'
 gset(87, f"2 No. for the erection window D3 on the '{SRC_A}. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-bu['A98'] = ("Testing basis: one tank filled and the water pumped across to the second (Engineer's email of 30-Aug-2026). The sequence and dates are on the "
-             "'Programme' tab, P18 to P22: Tank 1 tested 17 to 24-Nov-2026, the water dosed and retained, transferred 05 to 07-Dec once Tank 2 is complete, "
-             "Tank 2 tested 08 to 12-Dec, integrated commissioning 13 to 15-Dec after the tie-in, pumping from Tank 2 (Tank 1 is empty after the transfer; a live demonstration from Tank 1 would need a refill - sensitivity S8). The water sequence and its provisional disinfection method are on the 'Programme' tab below the derived periods. The Contractor's programme tests both tanks at once, which "
-             "needs twice the water; that is shown for comparison on the 'Programme' tab, Section 5, and not carried. Water is assumed tankered until the "
-             "Employer confirms a source. Not included: the supplier's own leak-test supervision (in Item 6), re-testing after a failed test (the Contractor's "
-             "obligation under RFP Scope of Works 5.1) and pipework testing (Item 8). Scope: RFP Scope of Works 5.1 to 5.3.")
-bu.row_dimensions[98].height = 96
-gset(100, "3,774 m3 effective at 3.7 m water level (RFP Scope of Works section 1); one fill, the water re-used for Tank 2. Tankered at SAR 6.00/m3 - assumption; falls away if a network fill is confirmed")
+bu['A98'] = ("What Item 7 pays for, in three parts. (1) Hydrostatic test water: one fill of 3,774 m3 tankered into Tank 1 (7.1), tested, then pumped across to Tank 2 "
+             "(7.2, 7.3) and topped up (7.5) - the Engineer's email of 30-Aug-2026 allows the water to be re-used; the Contractor's programme fills both tanks at once, "
+             "shown for comparison on the 'Programme' tab, Section 5, and not included. (2) Disinfection: chlorinating the test water (7.6, 7.7) disinfects the "
+             "wetted surfaces only; the surfaces above the 3.7 m test level are covered by a separate spray application (7.25), and the water is dechlorinated before "
+             "any discharge (7.9); samples and laboratory tests at 7.10 and 7.11. (3) Functional commissioning: component checks after the tie-in and the integrated "
+             "demonstration with both tanks connected and holding water (7.13 to 7.19); Tank 2 holds the test water and Tank 1 is given an operating fill of about "
+             "1,020 m3 by tanker (7.24), because a network refill after the tie-in has not been confirmed as available or free and a demonstration of Tank 1 on its "
+             "valves and instruments alone is not established as meeting the integrated commissioning scope (RFP Scope of Works 5.2). Dates: 'Programme' tab, "
+             "windows P18 to P22 - Tank 1 test 17 to 24-Nov, transfer 05 to 07-Dec, Tank 2 test 08 to 12-Dec, Tank 1 operating fill 09 to 10-Dec, integrated "
+             "commissioning 13 to 15-Dec-2026. The whole method is provisional until the Contractor's method statement is accepted by the Engineer: the water "
+             "source, the disinfection method, the depth required in Tank 1 and the release of the water (kept as first stock or discharged) are all unconfirmed. "
+             "Not included: the supplier's own leak-test supervision (Item 6), re-testing after a failed test (the Contractor's obligation under RFP Scope of "
+             "Works 5.1) and pipework testing (Item 8).")
+bu.row_dimensions[98].height = 150
+gset(100, "Quantity: 3,774 m3, the volume at the 3.7 m test level (RFP Scope of Works section 1), one fill only - the same water is pumped to Tank 2 (Engineer's email of 30-Aug-2026); water for testing is excluded by the supplier (MNT-AY-486 exclusion 5, Assumption 9). Rate: tankered water at SAR 6.00/m3, assessment allowance - needs confirmation of the source; a network source confirmed by the Employer would replace it")
 gset(101, "The transfer P19 and the Tank 2 test P20 on the 'Programme' tab (7 days); pump duty an assessed assumption pending the Contractor's method statement. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 gset(103, "2 No. x 3 days, the transfer window P19 on the 'Programme' tab. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-gset(104, "10 per cent of one fill, covering losses while the water is retained in Tank 1 between its test and the transfer to Tank 2 - assumption")
+gset(104, "Quantity: 10 per cent of the first fill, for losses while the water waits in Tank 1 and for topping Tank 2 up to its test level - assessment allowance. Rate: as 7.1")
 gset(112, "Component checks and integrated commissioning (P21 and P21b on the 'Programme' tab) plus one day at each hydrostatic test hold; reduced from 15 days because the fills and holds are supervised by the QA/QC inspector (1.3) and the supplier (Item 6). Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 gset(113, "2 No. for the component checks and the integrated commissioning (P21 and P21b on the 'Programme' tab); reduced from 2 No. x 10 days. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 gset(115, "Tie-in connections (P16 on the 'Programme' tab, 4 working days) plus one day of integrated commissioning. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
@@ -1165,9 +1259,11 @@ gset(39, "Survey and levelling of the existing foundation (activity QCD18TSECONS
 bu['D40'] = 8
 gset(40, "The programme carries 19 deliverable and submittal activities plus the material approval and inspection requests; 8 days of document control, doubled from the previous revision on that evidence. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 bu['D85'] = 0
-gset(85, "Provisionally not assessed, to avoid duplication: sealant application at every joint is the erection work of RFP Scope of Works work package 2, performed by the supplier under Item 6 on the recorded scope of its offer, whose conditions ask the Contractor for offloading, scaffolding, storage, power and helpers only. To be confirmed against the original offer. Previously 2 tanks at SAR 1,500.00")
-bu['D86'] = 0
-gset(86, "Provisionally not assessed, to avoid duplication: bolts, nuts, washers and tie rods are supplied and fixed by the tank supplier (Item 6, recorded scope); no Contractor fixing or touch-up work is identified. To be confirmed against the original offer. Previously 2 tanks at SAR 2,250.00")
+gset(85, "Included in the supplier's price (Assumption 9): the leak sealant is supplied by the tank supplier (quotation MNT-AY-486, specification item 6) and its application at every joint is the supplier's installation work (RFP Scope of Works work package 2). No Contractor sealant tools or consumables are needed, so nil. Previously 2 tanks at SAR 1,500.00")
+bu['B86'] = "Panel storage and handling consumables - timber packers, covers, strapping and cleaning materials for the Contractor's storage and shifting of the tank materials"
+bu['D86'] = 2
+bu['E86'] = 1500
+gset(86, "Quantity: 2 tanks. The bolts, nuts, washers and tie rods are supplied and fixed by the tank supplier (MNT-AY-486, items 3 and 4; Assumption 9) and are not priced here. Storing the materials until the site is ready and moving them to the installation area are the client's, so the Contractor's (MNT-AY-486 note, page 2): the consumables for that handling are a fair Contractor cost, priced once here; the containers are 1.11 and the plant 5.1 and 5.2. Rate: assessed allowance - needs confirmation by the Contractor. Previously 'fixings, touch-up and miscellaneous consumables', 2 tanks at SAR 2,250.00")
 bu['D111'] = 0
 gset(111, "Not assessed: RFP Scope of Works 5.1 and 5.2 require the tests to be witnessed by the Engineer, not inspected by a third party, and the third-party factory acceptance test is dealt with at 7.23. Previously 2 visits at SAR 2,400.00")
 bu['D103'] = 0
@@ -1176,61 +1272,61 @@ bu['D107'] = f"=Programme!{AFTER_CELL}"
 gset(107, "Helper man-days after the approved histogram ends on 11-Dec-2026 ('Programme' tab, Section 4, dated check): Tank 2 sampling and inspection on 12-Dec and dechlorination in the tank on 13-Dec. The dosing of the test water in Tank 1 (01 to 03-Dec) falls within the approved weeks priced at 5.10; the water is kept in Tank 2 as first stock, so there is no discharge. Previously 2 No. x 10 days")
 bu['B107'] = 'Sampling and dechlorination labour after the approved histogram weeks'
 # Item 8
-bu['A127'] = ("External pipework, valves, fittings and instruments from the tanks to the tie-in points (RFP Scope of Works, piping requirements); not in the tank "
+bu['A129'] = ("External pipework, valves, fittings and instruments from the tanks to the tie-in points (RFP Scope of Works, piping requirements); not in the tank "
               "supplier's price. Priced to the RFP specification: uPVC below DN150, GRP or ductile iron above, butterfly isolation valves. The Contractor is "
               "buying different materials (HDPE pipe, a gate valve, a motorised valve); these are not approved and are shown after line 8.21 for information "
               "only. No quantities exist yet - the pipework shop drawings were rejected and no take-off has been received - so the quantities are assessed "
               "from the RFP sketch and are provisional. Rates include installation. Lines 8.16 to 8.19 test the pipework only; tank testing is Item 7.")
-bu.row_dimensions[127].height = 96
-bu['B129'] = 'Main pipework above DN150 - GRP or ductile iron with internal lining, with fittings, supplied and installed (RFP General Piping Requirements)'
-gset(129, "Assessed run lengths for inlet, outlet and overflow of 2 tanks - take-off required. The Contractor is procuring HDPE pipe of 355 mm and 315 mm outside diameter (nominal size subject to the pipe standard and SDR and to the Engineer's confirmation): see the alternative after line 8.21. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-bu['B130'] = 'Small-bore pipework below DN150 - uPVC Schedule 40, supplied and installed'
-gset(130, "Assessed - take-off required. The Contractor is procuring uPVC pipe of 160 mm and 110 mm outside diameter (nominal size subject to the pipe standard and to the Engineer's confirmation); whether the 160 mm pipe falls below or at the DN150 boundary of the specification depends on the pipe standard and is to be confirmed by the Engineer. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-bu['B131'] = 'Resilient-seated butterfly isolation valves DN150-DN300, lever-operated up to DN200 and gearbox-operated above, installed'
-gset(131, "Assessed count - take-off required; the procurement tracker lists 2 valves (a gate valve DN300 and a motorised butterfly valve DN355), neither to the specified type or operation - see the alternative after line 8.21. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-gset(138, "Excluded from the tank supplier scope; the programme shows level transmitters installed on both tanks (activities QCD18TSECONT1MW2060 and QCD18TSECONT2MW2040). Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
-gset(142, "Tie-in connections with the existing pump room after the readiness milestone of 03-Dec-2026 (activity QCD18TSECONTC2040, 4 working days). Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+bu.row_dimensions[129].height = 96
+bu['B131'] = 'Main pipework above DN150 - GRP or ductile iron with internal lining, with fittings, supplied and installed (RFP General Piping Requirements)'
+gset(131, "Assessed run lengths for inlet, outlet and overflow of 2 tanks - take-off required. The Contractor is procuring HDPE pipe of 355 mm and 315 mm outside diameter (nominal size subject to the pipe standard and SDR and to the Engineer's confirmation): see the alternative after line 8.21. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+bu['B132'] = 'Small-bore pipework below DN150 - uPVC Schedule 40, supplied and installed'
+gset(132, "Assessed - take-off required. The Contractor is procuring uPVC pipe of 160 mm and 110 mm outside diameter (nominal size subject to the pipe standard and to the Engineer's confirmation); whether the 160 mm pipe falls below or at the DN150 boundary of the specification depends on the pipe standard and is to be confirmed by the Engineer. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+bu['B133'] = 'Resilient-seated butterfly isolation valves DN150-DN300, lever-operated up to DN200 and gearbox-operated above, installed'
+gset(133, "Assessed count - take-off required; the procurement tracker lists 2 valves (a gate valve DN300 and a motorised butterfly valve DN355), neither to the specified type or operation - see the alternative after line 8.21. Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+gset(140, "Excluded from the tank supplier scope; the programme shows level transmitters installed on both tanks (activities QCD18TSECONT1MW2060 and QCD18TSECONT2MW2040). Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
+gset(144, "Tie-in connections with the existing pump room after the readiness milestone of 03-Dec-2026 (activity QCD18TSECONTC2040, 4 working days). Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation")
 # Item 8 alternative block: insert 8 rows at 151 (before ASSUMPTIONS at 152 after the earlier shift)
-ASSUMP = 152
-insert_rows_keep_styles(bu, ASSUMP - 1, 9, 129)   # rows 151..159 new; assumptions now at 161
-for rr in range(151, 160):
+ASSUMP = 154
+insert_rows_keep_styles(bu, ASSUMP - 1, 9, 131)   # rows 153..161 new; assumptions now at 163
+for rr in range(153, 162):
     for c in range(1, 8): bu.cell(rr, c).value = None
-bu['B151'] = "Contractor's procured materials in place of lines 8.1 to 8.3 - shown for information, not carried"
-cp(bu['B48'], bu['B151'])
-for c in (1, 3, 4, 5, 6, 7): cp(bu.cell(48, c), bu.cell(151, c))
-bu.row_dimensions[151].height = 18
+bu['B153'] = "Contractor's procured materials in place of lines 8.1 to 8.3 - shown for information, not carried"
+cp(bu['B48'], bu['B153'])
+for c in (1, 3, 4, 5, 6, 7): cp(bu.cell(48, c), bu.cell(153, c))
+bu.row_dimensions[153].height = 18
 alt = [
-    ('a.1', 'HDPE PE100 pipe, 355 mm and 315 mm outside diameter (nominal size subject to the pipe standard and SDR and to the Engineer\'s confirmation), with HDPE fittings, flange adaptors, reducer, elbow and tee, supplied and installed - in place of line 8.1', 'm', "=D129", 280,
+    ('a.1', 'HDPE PE100 pipe, 355 mm and 315 mm outside diameter (nominal size subject to the pipe standard and SDR and to the Engineer\'s confirmation), with HDPE fittings, flange adaptors, reducer, elbow and tee, supplied and installed - in place of line 8.1', 'm', "=D131", 280,
      "Same assessed length as 8.1 (no take-off). Union Pipe Industry supply per the procurement tracker of 29-Sep-2026; PQD approved Code B 16-Sep-2026, material approval request under preparation - not approved against the GRP or ductile iron specification. The tracker gives outside diameters, not nominal sizes; the nominal size, pressure class and SDR are to be confirmed on the approved shop drawings and by the Engineer. Assessed market rate, Riyadh, Sep-2026 - assumption"),
-    ('a.2', 'uPVC pipe, 160 mm and 110 mm outside diameter (nominal size subject to the pipe standard and to the Engineer\'s confirmation), with uPVC elbows, supplied and installed - in place of line 8.2', 'm', "=D130", "=E130",
+    ('a.2', 'uPVC pipe, 160 mm and 110 mm outside diameter (nominal size subject to the pipe standard and to the Engineer\'s confirmation), with uPVC elbows, supplied and installed - in place of line 8.2', 'm', "=D132", "=E132",
      "Same assessed length and rate as 8.2: the material conforms below DN150. Al Muneef supply; PQD submitted 15-Sep-2026, material approval request under preparation"),
     ('a.3', 'Gate valve DN300, installed - in place of one valve at line 8.3', 'No', 1, 6500,
      "Saudi Pipe Systems supply. Does not conform: the RFP General Piping Requirements call for resilient-seated butterfly isolation valves. Assessed market rate, Riyadh, Sep-2026 - assumption"),
     ('a.4', 'Motorised butterfly valve DN355 as listed by the Contractor, installed, actuator included, power and control supply excluded - in place of one valve at line 8.3', 'No', 1, 14000,
      "Saudi Pipe Systems supply. Does not conform: the RFP requires gearbox operation above DN200; a motorised valve needs a power and control supply that is in no party's scope. Assessed market rate, Riyadh, Sep-2026 - assumption"),
-    ('a.5', 'Remaining valves at line 8.3 to the RFP specification - 8 No. retained', 'No', "=D131-2", "=E131",
+    ('a.5', 'Remaining valves at line 8.3 to the RFP specification - 8 No. retained', 'No', "=D133-2", "=E133",
      "The tracker lists only 2 valves; the count at 8.3 stays assessed until the pipework shop drawings are approved and measured"),
 ]
-rr = 152
+rr = 154
 for ref, desc, unit, q, rate, basis in alt:
     bu.cell(rr, 1, ref); bu.cell(rr, 2, desc); bu.cell(rr, 3, unit); bu.cell(rr, 4, q); bu.cell(rr, 5, rate); bu.cell(rr, 6, f"=D{rr}*E{rr}"); bu.cell(rr, 7, basis)
     bu.row_dimensions[rr].height = max(39, 13 * (len(basis) // 70 + 1))
     rr += 1
 bu.cell(rr, 2, 'Alternative total for lines 8.1 to 8.3 on the procured materials - information only'); cp(bu['B63'], bu.cell(rr, 2))
-bu.cell(rr, 6, f"=SUM(F152:F{rr - 1})"); cp(bu['F63'], bu.cell(rr, 6))
+bu.cell(rr, 6, f"=SUM(F154:F{rr - 1})"); cp(bu['F63'], bu.cell(rr, 6))
 for c in (1, 3, 4, 5, 7): cp(bu.cell(63, c), bu.cell(rr, c))
 rr += 1
-bu.cell(rr, 2, 'Assessed amount of lines 8.1 to 8.3 to the RFP specification, carried'); cp(bu['B63'], bu.cell(rr, 2))
-bu.cell(rr, 6, "=F129+F130+F131"); cp(bu['F63'], bu.cell(rr, 6))
+bu.cell(rr, 2, 'Assessed amount of lines 8.1 to 8.3 to the RFP specification, included in the assessment'); cp(bu['B63'], bu.cell(rr, 2))
+bu.cell(rr, 6, "=F131+F132+F133"); cp(bu['F63'], bu.cell(rr, 6))
 for c in (1, 3, 4, 5, 7): cp(bu.cell(63, c), bu.cell(rr, c))
 rr += 1
 bu.cell(rr, 2, "Difference - not carried: the substitution is not approved"); cp(bu['B63'], bu.cell(rr, 2))
 bu.cell(rr, 6, f"=F{rr - 1}-F{rr - 2}"); cp(bu['F63'], bu.cell(rr, 6))
 for c in (1, 3, 4, 5, 7): cp(bu.cell(63, c), bu.cell(rr, c))
 bu.row_dimensions[rr].height = 30
-assert rr == 159
+assert rr == 161
 # assumptions block now rows 161..169
-A0 = 161
+A0 = 163
 assert str(bu.cell(A0, 1).value).startswith('ASSUMPTIONS'), bu.cell(A0, 1).value
 bu.cell(A0 + 2, 1).value = ("2. Rates marked 'assumption' are assessed Riyadh market rates (Sep-2026): crane 50 t SAR 2,500/day; boom truck SAR 1,200/day; telehandler SAR 900/day; "
     "scaffolding SAR 55/m2; generator 100 kVA SAR 11,000/month with fuel; general labour SAR 150/day; rigger SAR 250/day; site engineer SAR 12,000/month; HSE and QA/QC "
@@ -1242,6 +1338,24 @@ bu.cell(A0 + 3, 1).value = ("3. Programme: every period on this tab comes from t
     "pump-room readiness date of 03-Dec-2026 and what follows it. The staged tank deliveries (7 to 9 weeks for the first tank, 12 to 14 for the second, delivered "
     "duty paid from the UAE) are the Contractor's risk: no standby or prolongation is priced. Dates after 28-Sep-2026 are forecasts.")
 bu.row_dimensions[A0 + 3].height = 63
+SC = ("Tank supplier scope - user-authorised assumption. The split of work between the tank supplier and the Contractor is taken as described in the Al Muhaideb "
+      "National Tanks (National Factory for Fiberglass) quotation MNT-AY-486 dated 24-Jun-2026 with its tank and foundation drawings dated 06-May-2026, received "
+      "30-Sep-2026. Included by the supplier (page 1, 'Supply, Installation and Testing'; specifications 1 to 13): manufacture, installation and testing, the "
+      "non-toxic leak sealant (item 6), all internal bolts, nuts, washers and tie rods in stainless steel 316 and external fixings in hot-dip galvanised steel "
+      "(items 3 and 4), level indicator tube, screened air vent, lockable manhole, internal and external ladders, roof panel supports, inlet, outlet, overflow "
+      "and drain openings and the galvanised steel skid base (items 5 to 13). Excluded by the supplier and therefore the Contractor's (exclusions 1 to 6, pages 1 "
+      "and 2): civil works and foundations; power for the installation; helpers and labourers; unloading and shifting of material at the installation location; "
+      "all pipe connections, piping, float switches, fittings, flanges, valves, water for testing and any third-party testing or inspection; forklift, crane, "
+      "elevator and scaffolding if required. The client stores the materials until the site is ready and transports them to the installation area by its own "
+      "means (note, page 2). Mismatch stated plainly: this is not the adopted Al Mousa S04488 / Stalwart offer. It is a different supplier, a different tank "
+      "(3,000 m3 gross, 30 (15+15) m x 25 m x 4 m, 3 No., non-insulated, with partition), addressed to WTB, dated June 2026 with 15 days' validity, priced at "
+      "SAR 1,575,000 per tank net of the discount, VAT excluded (SAR 525 per gross m3). Its price is not adopted; its scope split is applied on instruction as the "
+      "assessment assumption for Items 5, 6, 7 and 8 until the Al Mousa offer and its conditions are produced ('Build-Up Comparison' tab, Section 7, item 14).")
+bu.cell(A0 + 9, 1).value = '9. ' + SC
+cp(bu.cell(A0 + 8, 1), bu.cell(A0 + 9, 1))
+for c in range(2, 8): cp(bu.cell(A0 + 8, c), bu.cell(A0 + 9, c))
+bu.merge_cells(start_row=A0 + 9, start_column=1, end_row=A0 + 9, end_column=7)
+bu.row_dimensions[A0 + 9].height = 150
 bu.cell(A0 + 6, 1).value = ("6. The 5 per cent Overhead and Profit on the 'Assessment' tab is head-office overhead and profit only; every site cost is in the items. The "
     "Contractor's cost loading of its programme shows how it will apply for payment, not what things cost ('Build-Up Comparison' tab, Section 8).")
 bu.row_dimensions[A0 + 6].height = 37.8
@@ -1258,26 +1372,31 @@ asm.row_dimensions[4].height = 57
 asm['L8'] = ("Separate site outside the D-18 boundary: staff, welfare, water, security, insurance, mobilisation, demobilisation and close-out are priced for the "
              "site period in the Contractor's programme (22-Aug-2026 to the end of demobilisation, about 4 months), each staff role only for the phases it is "
              "needed. See 'Build-Up' Item 1 and 'Programme' tab Sections 3 and 4.")
-asm['L14'] = ("Plant, access, power and helpers that the tank price excludes (erection is in the tank price as recorded; the offer is to be checked). Helpers: the "
+asm['L14'] = ("Plant, access, power, storage handling and helpers that the tank supplier excludes (supply-and-install scope as described, 'Build-Up' Assumption 9); erection, sealant and fixings are in the tank price. Helpers: the "
               "approved manpower histogram, priced once. Plant days: from the programme activity dates. No plant schedule has been submitted. See 'Build-Up' Item 5 "
               "and 'Programme' tab Section 4.")
-asm['L17'] = ("One fill, the water re-used for the second tank (Engineer's email of 30-Aug-2026), with the tests fitted to the programme dates ('Programme' tab, P18 "
-              "to P22). The Contractor's parallel testing is shown for comparison, not carried. Third-party factory test at nil pending evidence that it is required. "
-              "Excludes the supplier's leak-test supervision (Item 6) and re-testing. Water source to be confirmed. See 'Build-Up' Item 7.")
+asm['L17'] = ("Hydrostatic test on one fill re-used for the second tank (Engineer's email of 30-Aug-2026), disinfection of the wetted surfaces by the test water "
+              "and of the surfaces above it by spraying, and an operating fill of Tank 1 for the integrated demonstration - no network refill is assumed. The method is "
+              "provisional until the Contractor's method statement is accepted by the Engineer. The Contractor's parallel testing is shown for comparison, not included. "
+              "Third-party factory test at nil pending evidence that it is required. See 'Build-Up' Item 7 and the 'Programme' tab, windows P18 to P22.")
 asm['L18'] = ("Priced to the RFP specification. The Contractor's different materials (HDPE pipe, gate valve, motorised valve) are not approved and are shown for "
               "information. No quantities yet: shop drawings rejected, take-off awaited. See 'Build-Up' Item 8.")
 asm['L12'] = ("Lowest of the Contractor's three quotations, adopted for dismantling, segregation and loading only on the scope recorded in the previous revision; the quotation itself is not attached to this revision and its scope split is not yet confirmed in writing. Haulage and handover are Item 4. See 'Build-Up' Item 3.")
-asm['N17'] = 'Provisional - water source and testing basis'
+asm['N17'] = 'Provisional - commissioning method, water source and disinfection to be accepted'
+bu['A92'] = ("The Contractor's adopted lowest quotation is taken at net supplier cost; the 5 per cent Overhead and Profit is applied once on the 'Assessment' tab. The quotation is for an insulated tank. The Engineer's (KEO) email of 30-Aug-2026: thermal insulation is not required, so a lower non-insulated price is expected and has been requested; the rate below will change when it is received. Scope: supply, installation and testing on the split described in Assumption 9 - the Contractor provides helpers, unloading and shifting, storage, plant, scaffolding, power, piping and test water. Market indication only, not adopted: the Al Muhaideb quotation MNT-AY-486 of 24-Jun-2026 prices a 3,000 m3 non-insulated tank at SAR 1,575,000 net (SAR 525 per gross m3) against the adopted insulated SAR 677 per m3 - a different supplier, size, count and date, so it supports the expectation of a lower non-insulated price without fixing one.")
+bu.row_dimensions[92].height = 84
 asm['A22'] = ("Contractor columns are as submitted. Assessed rates (column J) come from the 'Build-Up' tab; their time periods come from the Contractor's programme "
               "('XER WBS' tab as received, 'Programme' tab worked through). 'Provisional' means a confirmation is still outstanding ('Build-Up Comparison' tab, "
               "Section 7). The programme is under the Engineer's approval, not agreed; the Contractor has been instructed and is on site, the instruction reference "
               "not yet supplied.")
 asm.row_dimensions[22].height = 40
-asm['A23'] = f"This assessment is preliminary. It establishes a reasonable commercial provision on the information available at {DOCDATE} and does not constitute agreement of the final Variation value."
+asm['A23'] = (f"This assessment is preliminary. It establishes a reasonable commercial provision on the information available at {DOCDATE} and does not constitute agreement of the final Variation value. "
+              "Readiness for external issue is conditional: the testing and commissioning method (Item 7) has not been accepted by the Engineer, and the Contractor's original supplier offers, the labour ownership behind the approved manpower histogram and the pipework take-off remain outstanding; until then the items marked Provisional are allowances, not agreed values.")
+asm.row_dimensions[23].height = 42
 asm['A24'] = ('="Changes from Rev 01 dated 17-Sep-2026 (SAR 6,921,685.64): time periods taken from the Contractor\'s programme instead of an assumed 3 months (Items 1 and 5); '
               'helpers from the approved manpower histogram, priced once (Item 5); testing re-sequenced to the Engineer\'s one-fill basis with staff reconciled to it (Item 7); '
-              'lines within the supplier\'s scope or not required removed provisionally (5.12, 5.13, 7.4, 7.12) and PPE, survey and document control increased (1.18, 2.3, 2.4); '
-              'Item 8 priced to the RFP specification with the Contractor\'s materials shown alongside. No rate has moved. Net effect: SAR " & TEXT(K21-6921685.64,"#,##0.00;-#,##0.00") & " (" & TEXT((K21-6921685.64)/6921685.64,"0.0%;-0.0%") & ")."')
+              'lines within the supplier\'s scope or not required removed (5.12, 7.4, 7.12) and 5.13 re-scoped as the Contractor\'s storage and handling consumables, on the supplier scope as described (\'Build-Up\' Assumption 9); PPE, survey and document control increased (1.18, 2.3, 2.4); Tank 1 operating fill and spray disinfection added (7.24, 7.25); '
+              'Item 8 priced to the RFP specification with the Contractor\'s materials shown alongside. No existing rate has moved. Net effect: SAR " & TEXT(K21-6921685.64,"#,##0.00;-#,##0.00") & " (" & TEXT((K21-6921685.64)/6921685.64,"0.0%;-0.0%") & ")."')
 def _split_literals(f, n=240):
     """Excel limits a string literal inside a formula to 255 characters: split long literals with &."""
     out = []; i = 0
@@ -1305,12 +1424,13 @@ bc['H78'] = 'Baseline programme (data date 01-Jul-2026), S-curve, cash flow, man
 bc['H83'] = 'Not submitted; the programme is cost-loaded but carries no plant resources'
 bc.row_dimensions[78].height = 40
 # new requests rows 84-87 (insert 4 rows before conclusion at 85 -> conclusion moves to 89)
-insert_rows_keep_styles(bc, 84, 4, 83)
+insert_rows_keep_styles(bc, 84, 5, 83)
 new_req = [
     (10, 'Whose labour the direct manpower histogram (221 man-weeks, 28-Aug to 11-Dec-2026) represents: whether the tank supplier\'s erection crews, priced within Item 6, are included', 'This assessment.', 'Not yet requested'),
     (11, 'Quantity take-off for Item 8 from the pipework shop drawings once approved (returned Code C; resubmission 28 to 30-Sep-2026 per the look-ahead)', 'This assessment.', 'Not yet requested'),
     (12, 'Material approval requests for the HDPE main-line pipe, the gate valve DN300 and the motorised butterfly valve DN355 against the RFP General Piping Requirements, and the power and control supply for the motorised valve', 'This assessment.', 'Not yet requested'),
     (13, 'Basis on which a third-party factory acceptance test is being arranged (PQD, ITP, procedure and inspector CV submitted 26 to 28-Sep-2026): whether instructed by the Engineer or the Contractor\'s own quality plan', 'This assessment.', 'Not yet requested'),
+    (14, 'Copy of the adopted Al Mousa S04488 / Stalwart SS-07-26-1516 offer with its conditions, to confirm the supply-and-install scope split applied meanwhile from the Al Muhaideb quotation MNT-AY-486 (\'Build-Up\' Assumption 9: helpers, unloading and shifting, plant, scaffolding, power, storage, piping and test water excluded by the supplier; sealant and fixings included)', 'This assessment.', 'Not yet requested'),
 ]
 for i, (n, req, src, st) in enumerate(new_req):
     rr = 84 + i
@@ -1318,9 +1438,9 @@ for i, (n, req, src, st) in enumerate(new_req):
     bc.merge_cells(start_row=rr, start_column=3, end_row=rr, end_column=7)
     bc.row_dimensions[rr].height = 40
 # ensure rows 84-87 have merged C:G styles like row 83 (copied). Conclusion now at 89.
-assert str(bc['A89'].value).startswith('="Conclusion')
+assert str(bc['A90'].value).startswith('="Conclusion')
 # Section 8 after conclusion
-r = 91
+r = 92
 bc.cell(r, 1, "8.  THE CONTRACTOR'S PROGRAMME DOCUMENTS OF 29-SEP-2026 AS EVIDENCE");
 for c in range(1, 9): cp(bc.cell(72, c), bc.cell(r, c))
 bc.merge_cells(start_row=r, start_column=1, end_row=r, end_column=8); bc.row_dimensions[r].height = 21; r += 1
@@ -1384,7 +1504,7 @@ bcpara(("Direct manpower histogram as submitted (same workbook, sheet 'MP-HST-WK
         "The workbook does not say whose labour it is. The tank supplier's price under Item 6 includes installation and requires 4 to 6 helpers from the Contractor; "
         "if the histogram includes the supplier's erection crews it cannot support the Contractor's Items 1, 5 or 7, and if it is the Contractor's own labour, 136 "
         "skilled man-weeks on a job whose erection is subcontracted are unexplained. Until the Contractor answers (Section 7, item 10), the histogram is used only as "
-        "evidence of the 16-week labour window, which sits inside the works period carried."), 70)
+        "evidence of the 16-week labour window, which sits inside the works period allowed."), 70)
 for i, t in enumerate(['', 'Week ending', 'Total', 'Skilled', 'Helper', '', '', 'Note'], 1):
     bc.cell(r, i, t); cp(bc.cell(24, i), bc.cell(r, i))
 bc.row_dimensions[r].height = 21; r += 1
@@ -1403,26 +1523,159 @@ for c in (3, 4, 5): bc.cell(r, c).number_format = '#,##0'
 bc.row_dimensions[r].height = 21.75
 
 # ---------------------------------------------------------------- Programme tab: print setup and tab order
-import math
-def autofit(ws):
-    """Raise a row's height where wrapped text would not fit (PT Sans 10 pt: about 1.15 characters per width unit, 12.8 pt per line)."""
-    merged = {}
-    for rg in ws.merged_cells.ranges:
-        c1, r1, c2, r2 = rg.bounds
-        if r1 == r2:
-            merged[(r1, c1)] = sum((ws.column_dimensions[get_column_letter(c)].width or 8.66) for c in range(c1, c2 + 1))
+# ================================================================ Navigation and visual pass: labels, links, freeze panes, print titles
+LINK_BLUE = '0563C1'
+def linkify(cell, target, tip=None):
+    """Internal hyperlink on a cell, keeping its font but coloured and underlined."""
+    cell.hyperlink = target
+    f = copy.copy(cell.font)
+    cell.font = Font(name=f.name, sz=f.sz, b=f.b, i=f.i, color=LINK_BLUE, u='single')
+    if tip: cell.comment = None
+def navlink(ws, row, col, text, target, ncol=None):
+    c = ws.cell(row, col, text); cp(S_NOTE, c)
+    c.alignment = Alignment(horizontal='left', vertical='center', wrap_text=False)
+    c.font = Font(name='PT Sans', sz=9, i=True, color=LINK_BLUE, u='single')
+    c.hyperlink = target
+    if ncol: ws.merge_cells(start_row=row, start_column=col, end_row=row, end_column=ncol)
+
+# --- plain-language phrase pass over every text cell (not formulas)
+ASM_ITEM_ROW = {8: 1, 10: 2, 12: 3, 13: 4, 14: 5, 16: 6, 17: 7, 18: 8}
+PHRASES = [
+ (re.compile(r"carried to 'Assessment'!J(\d+)"), lambda m: f"goes to 'Assessment' item {ASM_ITEM_ROW[int(m.group(1))]}, column J"),
+ ("assessment allowance", "Assessed basis"), ("Assessment allowance", "Assessed basis"), ("assessment-allowance", "Assessed-basis"),
+ ("submitted programme", "SAMA Submitted Programme"), ("Submitted programme", "SAMA Submitted Programme"), ("submitted-programme", "SAMA Submitted Programme"),
+ ("the programme as submitted", "the SAMA Submitted Programme"), ("programme exactly as submitted", "SAMA Submitted Programme exactly as submitted"),
+ ("'As submitted'", "'SAMA Submitted Programme'"), ("As submitted:", "SAMA Submitted Programme:"), ("As submitted only:", "SAMA Submitted Programme only:"),
+ ("Contractor columns are as submitted", "The SAMA Submitted Cost columns are as submitted"),
+ ("Assessed market rate, Riyadh, Sep-2026 - assumption pending the Contractor's substantiation", "Rate: assessed allowance (Riyadh market, Sep-2026) - needs confirmation by the Contractor"),
+ ("Assessed market rate, Riyadh, Sep-2026 - assumption", "Rate: assessed allowance (Riyadh market, Sep-2026) - needs confirmation"),
+ ("- assumption pending the Contractor's substantiation", "- needs confirmation by the Contractor"),
+ ("Provisionally not assessed, to avoid duplication:", "Included in the supplier's price (provisional, to avoid double counting):"),
+ ("Nil: the transfer labour is within the approved manpower histogram", "Included in line 5.10 (approved histogram helpers): the transfer labour is within the approved manpower histogram"),
+ ("Carried basis if", "Assessment allowance if"), ("carried basis", "assessment allowance"), ("Carried basis", "Assessment allowance"),
+ ("the carried quantity", "the assessment-allowance quantity"), ("Carried:", "Assessment allowance:"), ("Carried =", "Assessment allowance ="),
+ ("as-submitted amounts", "submitted-programme amounts"), ("as submitted and carried", "in the submitted programme and in the assessment allowance"),
+ ("as submitted as submitted and carried", "in the submitted programme and in the assessment allowance"),
+ ("not carried into the assessment", "not included in the assessment"), ("Not carried", "Not included in the assessment"), ("not carried", "not included in the assessment"),
+ ("is carried at nil", "is included at nil"), ("hire days carried", "hire days used"), ("Hire days carried", "Hire days used"),
+ ("the departure carried to", "the departure taken to"), ("is carried to 'Build-Up'", "goes to 'Build-Up'"), ("carried to 'Build-Up'", "taken to 'Build-Up'"),
+ ("the approved figures are carried", "the approved figures are used"), ("carried for the transfer", "allowed for the transfer"), ("1 week carried", "1 week allowed"),
+ ("Nil as submitted and carried", "Nil on both bases"), ("Carried for", "Allowed for"), ("carried into", "included in"),
+ ("is carried", "is used"), ("are carried", "are used"), ("carried", "used"), ("Carried", "Used"),
+]
+def phrase_pass(ws):
     for row in ws.iter_rows():
         for c in row:
-            if not isinstance(c.value, str) or c.value.startswith('=') or not c.value.strip(): continue
-            if not (c.alignment and c.alignment.wrap_text): continue
-            width = merged.get((c.row, c.column), ws.column_dimensions[get_column_letter(c.column)].width or 8.66)
-            sz = (c.font.sz or 10)
-            cpl = max(8, width * 1.15 * 10 / sz)
-            lines = sum(max(1, math.ceil(len(p) / cpl)) for p in c.value.split('\n'))
-            need = lines * (sz * 1.28) + 4
-            cur = ws.row_dimensions[c.row].height
-            if cur is None or need > cur:
-                ws.row_dimensions[c.row].height = round(need, 1)
+            v = c.value
+            if not isinstance(v, str) or v.startswith('=') or not v.strip(): continue
+            new = v
+            for a, b in PHRASES:
+                new = a.sub(b, new) if hasattr(a, 'sub') else new.replace(a, b)
+            if new != v: c.value = new
+for _n in ('Assessment', 'Build-Up', 'Build-Up Comparison', 'Programme'):
+    phrase_pass(wb[_n])
+
+# --- Build-Up: quantity-source prefix, units, how-to text, freeze, print titles
+bu['A4'] = ("How to read this tab: each line is quantity x rate = amount, with the reason beside it ('Basis': what the line buys, how many, how long, the rate and "
+            "where the quantity comes from). Item totals go to column J of the 'Assessment' tab; the 'Return' link on each total row goes back there. A quantity in blue "
+            "is a link to the 'Programme' tab row it is calculated from - click it. Units: a 'month' is 30.4 calendar days; a 'day' is one calendar day of hire or "
+            "attendance; a 'man-day' is one person for one working day; working days exclude Fridays. 'Needs confirmation' marks an assessment allowance the "
+            "Contractor has not yet substantiated; 'Provisional' marks a scope or price awaiting a document. All amounts exclude VAT.")
+bu.row_dimensions[4].height = 84
+for row in bu.iter_rows(min_row=9, max_row=bu.max_row):
+    d, g = row[3], row[6]
+    if isinstance(d.value, str) and d.value.startswith('=Programme!'):
+        m = re.search(r'\$?([A-Z])\$?(\d+)', d.value.split('!')[1])
+        linkify(d, f"#'Programme'!{'A' if pg.cell(int(m.group(2)), 1).value else 'B'}{m.group(2)}")
+bu.freeze_panes = 'A4'
+bu.column_dimensions['C'].width = 12
+bu.print_title_rows = '1:3'
+# item banners and totals
+BU_ITEM_BANNER, BU_ITEM_TOTAL = {}, {}
+for row in bu.iter_rows(min_row=5, max_row=bu.max_row, max_col=7):
+    a, b = row[0].value, row[1].value
+    if isinstance(a, str) and re.match(r'ITEM (\d) -', a):
+        BU_ITEM_BANNER[int(re.match(r'ITEM (\d) -', a).group(1))] = row[0].row
+    if isinstance(b, str) and (b.startswith('TOTAL ITEM') or b.startswith('RATE PER TANK') or b.startswith('Rate per tank')):
+        m = re.search(r"item (\d)", b)
+        if m: BU_ITEM_TOTAL[int(m.group(1))] = row[1].row
+for item, arow in ASM_ITEM_ROW.items():
+    pass
+ASM_ROW_OF_ITEM = {v: k for k, v in ASM_ITEM_ROW.items()}
+for item, trow in BU_ITEM_TOTAL.items():
+    linkify(bu.cell(trow, 2), f"#'Assessment'!A{ASM_ROW_OF_ITEM[item]}")
+    navlink(bu, trow, 7, f"Return to 'Assessment' item {item}", f"#'Assessment'!A{ASM_ROW_OF_ITEM[item]}")
+    bu.cell(trow, 7).alignment = Alignment(horizontal='right', vertical='center')
+navlink(bu, 5, 2, "Back to 'Assessment'", "#'Assessment'!A1")
+navlink(bu, 5, 7, "Forward to 'Programme' (dates, people and plant behind the quantities)", "#'Programme'!A1")
+bu.row_dimensions[5].height = 15
+
+# --- Assessment: item links, notes
+for arow, item in ASM_ITEM_ROW.items():
+    linkify(asm.cell(arow, 1), f"#'Build-Up'!A{BU_ITEM_BANNER[item]}")
+    linkify(asm.cell(arow, 10), f"#'Build-Up'!B{BU_ITEM_TOTAL[item]}")
+asm['A22'] = ("Contractor columns are as submitted. Assessed rates (column J) come from the 'Build-Up' tab: click an item number or a blue rate to open its build-up; on "
+              "the 'Build-Up' tab a blue quantity opens the 'Programme' tab row it is calculated from, and on the 'Programme' tab a blue date opens the Contractor's "
+              "activity on the 'XER WBS' tab. 'Provisional' means a confirmation is still outstanding ('Build-Up Comparison' tab, Section 7). The programme is under "
+              "the Engineer's approval, not agreed; the Contractor has been instructed and is on site, the instruction reference not yet supplied.")
+asm.row_dimensions[22].height = 54
+asm.print_title_rows = '1:6'
+asm['C5'] = 'SAMA SUBMITTED COST - SAMACO-RRFP-000001, 13-AUG-2026'
+asm['H5'] = 'ASSESSED'
+asm['L6'] = 'Assessed - reason'
+
+# --- Programme: links from every formula that looks up an activity ID, and from Section 5 / 6 references
+def first_id(text):
+    m = re.search(r'"(QCD18TSE[A-Z0-9]+)"', text) or re.search(r'\b(QCD18TSE[A-Z0-9]+)\b', text)
+    return m.group(1) if m else None
+for row in pg.iter_rows(min_row=6, max_row=pg.max_row, max_col=10):
+    for c in row:
+        v = c.value
+        if isinstance(v, str) and v.startswith('=') and 'MATCH("QCD18TSE' in v:
+            aid = first_id(v)
+            if aid in XROW: linkify(c, f"#'XER WBS'!A{XROW[aid]}")
+        elif isinstance(v, str) and v.startswith('=SUMPRODUCT') and "'XER WBS'" in v:
+            linkify(c, f"#'XER WBS'!A{XA_HDR}")
+# Section 5 rows: column A -> Build-Up line, column G -> source row on this tab
+for rr in range(first4, last4 + 1):
+    b = pg.cell(rr, 2).value
+    if isinstance(b, str) and b.startswith("='Build-Up'!B"):
+        linkify(pg.cell(rr, 1), f"#'Build-Up'!A{b.split('B')[-1]}")
+    g = pg.cell(rr, 7).value
+    if isinstance(g, str) and g.startswith('='):
+        m = re.search(r'(?<![A-Z$])\$?([C-I])\$?(\d+)', g)
+        if m and int(m.group(2)) < first4 and (pg.cell(int(m.group(2)), 1).value or pg.cell(int(m.group(2)), 2).value):
+            linkify(pg.cell(rr, 7), f"#'Programme'!{'A' if pg.cell(int(m.group(2)), 1).value else 'B'}{m.group(2)}")
+# Section 6 register: column A -> Build-Up line; column C -> XER activity
+for rr in range(g_first, g_last + 1):
+    b = pg.cell(rr, 2).value
+    if isinstance(b, str) and b.startswith("='Build-Up'!B"):
+        linkify(pg.cell(rr, 1), f"#'Build-Up'!A{b.split('B')[-1]}")
+    cc = pg.cell(rr, 3).value
+    if isinstance(cc, str):
+        aid = first_id(cc)
+        if aid in XROW: linkify(pg.cell(rr, 3), f"#'XER WBS'!A{XROW[aid]}")
+# Section 4 roles and plant: dates that copy a Section 3 row
+for rr in range(SEC3_END + 1, first4):
+    for col in (3, 4):
+        v = pg.cell(rr, col).value
+        if isinstance(v, str) and re.fullmatch(r'=[C-H]\d+', v) and int(v[2:]) < SEC3_END:
+            linkify(pg.cell(rr, col), f"#'Programme'!A{v[2:]}")
+navlink(pg, 5, 2, "Back to 'Build-Up'", "#'Build-Up'!A1")
+navlink(pg, 5, 10, "Forward to 'XER WBS' (the Contractor's programme as received)   |   Back to 'Assessment'", "#'XER WBS'!A1")
+pg.row_dimensions[5].height = 15
+# Section 5 comparison columns shaded
+GREY = PatternFill('solid', fgColor='EDF0F2')
+for rr in range(first4, last4 + 1):
+    for col in (5, 6, 8):
+        if pg.cell(rr, col).value not in (None, ''): pg.cell(rr, col).fill = GREY
+
+# --- XER WBS: navigation row
+navlink(wx, 5, 2, "Back to 'Programme'", "#'Programme'!A1")
+navlink(wx, 5, 13, "Back to 'Assessment'", "#'Assessment'!A1")
+wx.row_dimensions[5].height = 15
+
+
 for name in ('Assessment', 'Build-Up', 'Build-Up Comparison', 'Programme'):
     autofit(wb[name])
 wb.active = wb.sheetnames.index('Project Info')
