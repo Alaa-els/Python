@@ -6,7 +6,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment, Font, PatternFill, Border, Side
 from openpyxl.worksheet.pagebreak import Break
 import math
-PAGE = 930.0   # printable height of one landscape page at the fit-to-width scale, in points (measured on the rendered file)
+PAGE = 820.0   # printable height of one landscape page at the fit-to-width scale, in points (measured on the rendered file)
 def est(text, width, sz=10):
     cpl = max(8, width * 1.15 * 10 / sz)
     return math.ceil(len(text) / cpl) * (sz * 1.28) + 4
@@ -439,13 +439,13 @@ p19 = add3('P19', 'Transfer of the test water from Tank 1 to Tank 2 (working day
            "Starts the working day after both the Tank 1 test has passed (P18) and Tank 2 is ready to receive water (mechanical works complete, P14, interior flushed). Pumped tank to tank through temporary hoses with the outlet valves isolated; the tie-in is not needed for the transfer. 3 working days is an assessed assumption pending the Contractor's method statement: 3,774 m3 at about 130 m3 an hour over 10-hour shifts, a 150 mm self-priming diesel pump against a low head (adjacent tanks at one level, about 4 m static plus hose friction) - 'Build-Up' lines 7.2 to 7.4")
 p20 = add3('P20', 'Hydrostatic test - Tank 2, after the transfer (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
            f"={NEXT(f'G{p19}')}", f"={W(f'F{r}', f'H{r}')}", 4,
-           "Elapsed: the Tank 2 test sequence is 7 working days from the start of the transfer, the same as the programme's per-tank figure - 3 days of transfer (P19, attended by the transfer labour at 7.4), then 4 days here: top-up to test level (1), the 24-hour hold (1, unattended apart from level readings), inspection of joints and nozzles and records (2). Attendance as for P18. Assessed assumption")
+           "Elapsed 4 working days (08, 09, 10 and 12-Dec; 11-Dec is a Friday): top-up to test level on 08-Dec, the 24-hour hold on 09-Dec (unattended apart from level readings), inspection of joints and nozzles on 10-Dec and sampling and records on 12-Dec - 3 attended days out of 4 (Section 4, dated check H8). With the 3 transfer days the Tank 2 sequence is 7 working days from the start of the transfer, the programme's per-tank figure. The test water was dosed in Tank 1 before the transfer, so Tank 2 receives its disinfection contact time during this hold; dechlorination and discharge follow the integrated commissioning and are not a prerequisite for it. Assessed assumption")
 p21 = add3('P21', 'Component and subsystem checks after the tie-in - instruments, nozzles, valves, ladders; tank-pump-network interfaces (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
            f"={NEXT(f'G{p16}')}", f"={W(f'F{r}', f'H{r}')}", 3,
            "RFP Scope of Works 5.2, component testing and subsystem validation. Follows the tie-in and may overlap the Tank 2 hydrostatic test, because these checks do not need both tanks in service. 3 working days is an assessed assumption, not a programme figure: the Contractor's programme has no separate activity for this stage (its two 7-working-day 'Testing & Commissioning' activities cover the hydrostatic test and the commissioning of each tank together). Staffing at 'Build-Up' lines 7.13 to 7.18")
 p21b = add3('P21b', 'Integrated system commissioning - full operational demonstration and witness testing (working days)', f"=G{p17}", f"=G{p17}", f"=G{p17}",
            f"={NEXT(f'MAX(G{p16},G{p20},G{p21})')}", f"={W(f'F{r}', f'H{r}')}", 3,
-           "RFP Scope of Works 5.2, integrated system commissioning. Starts the working day after the last of the tie-in (P16), the Tank 2 hydrostatic test (P20) and the component checks (P21): both tanks must have passed and be connected before full operation is demonstrated. 3 working days (pump interface run, network demonstration, witnessed test and records) is an assessed assumption on the same footing as P21")
+           "RFP Scope of Works 5.2, integrated system commissioning. Starts the working day after the last of the tie-in (P16), the Tank 2 hydrostatic test (P20) and the component checks (P21): both tanks must have passed and be connected before full operation is demonstrated. The demonstration uses the retained, disinfected test water (both tanks hold it after the transfer and the Tank 2 hold), so discharge and dechlorination (16 to 17-Dec) come after it and do not move the completion or the demobilisation. 3 working days (pump interface run, network demonstration, witnessed test and records) is an assessed assumption on the same footing as P21")
 p22 = add3('P22', 'Completion of testing and commissioning - both tanks', f"={AF('QCD18TSEOMS1040')}", f"=C{r}", '-', f"=G{p21b}", f"=F{r}", '-',
            "A: completion milestones QCD18TSEOMS1040 and 1050, 16-Dec-2026, with parallel testing. B: end of the integrated system commissioning, conditional on the Tank 1 test preceding the tie-in (P18); if it cannot, see sensitivity S2", 'ms')
 p23 = add3('P23', 'Demobilisation, as-built drawings and close-out documents (working days)', f"={AS('QCD18TSEDMOB1020')}", f"={AF('QCD18TSEDMOB1020')}", f"={WD(f'C{r}', f'D{r}')}",
@@ -514,14 +514,15 @@ para(pg, r, ("Skilled people. The histogram does not say who employs them. They 
 para(pg, r, ("Helpers. Every approved helper man-day is priced once at 'Build-Up' line 5.10, provisionally including the dismantling weeks, where the helpers "
              "may instead be within the subcontractor's crew (S7). Duties that fall inside the approved weeks and within the approved capacity are not "
              "priced again (transfer labour 7.4); duties after the histogram ends on 11-Dec-2026, or that do not fit the approved capacity, are priced on "
-             "their own lines (Tank 2 disinfection at 7.8, clean-up at 1.16). The dated check is in the table after the weekly figures. Specialists "
+             "their own lines (Tank 2 sampling and discharge at 7.8, clean-up at 1.16). The dated check is in the table after the weekly figures. Specialists "
              "(commissioning engineer, technicians, electrician, calibration, tie-in fitters, pipework testing crew) are not helpers and are priced in Items 7 "
              "and 8. No productivity or crew-sharing adjustment is made to the approved figures; whether each week's helpers were fully occupied cannot be "
              "verified from the documents received and is left unresolved."), height=83); r += 1
 HDRB = ['Ref', 'Week ending (histogram week) - phase', 'Erection activities in progress (XER)', 'Working days in week', 'Approved total', 'Approved skilled', 'Approved helpers', 'Helper man-days (people x days)', "Helper man-days priced at 5.10", 'Skilled people - where already paid; helper duties; adjustment']
 def hdrb(ws, r_):
     header(ws, r_, HDRB[:9]); ws.cell(r_, 10, HDRB[9]); cp(S_HDR, ws.cell(r_, 10))
-hdrb(pg, r); r += 1
+pg_break(pg, r)
+hdrb(pg, r); pg_add(32); r += 1
 XJ = f"'XER WBS'!$J${XA0}:$J${XA1}"; XK = f"'XER WBS'!$K${XA0}:$K${XA1}"; XC = f"'XER WBS'!$C${XA0}:$C${XA1}"
 HISTW = [
  ('28-Aug', 8, 5, 3, 'Mobilisation; dismantling starts', 'Skilled: mobilisation 22 to 26-Aug then dismantling from 27-Aug - allocation between Contractor mobilisation and the Item 3 crew unresolved. Helpers: site set-up; provisionally priced (S7)'),
@@ -540,7 +541,7 @@ HISTW = [
  ('27-Nov', 13, 8, 5, 'Single front - Tank 2 roof panels', 'As above'),
  ('04-Dec', 7, 4, 3, 'Tank 2 nozzles; readiness milestone 03-Dec', 'Skilled: nozzle fitters (Item 6) and pipework (Item 8) - unresolved, both priced elsewhere. Helpers: nozzle attendance; Tank 1 disinfection'),
  ('11-Dec', 5, 3, 2, 'Tie-in; transfer; Tank 2 test; disinfection', 'Skilled: tie-in fitters within 8.14 and 8.15. Helpers: transfer 05 to 07-Dec and Tank 2 top-up and hold attendance - priced here, so line 7.4 is nil'),
- ('18-Dec', 0, 0, 0, 'Demobilisation (carried basis from 16-Dec)', 'No approved labour: Tank 2 inspection 12-Dec, disinfection 13 to 17-Dec (7.8) and commissioning specialists (7.13 to 7.17) priced on their own lines'),
+ ('18-Dec', 0, 0, 0, 'Demobilisation (carried basis from 16-Dec)', 'No approved labour: Tank 2 sampling 12-Dec and discharge 16 to 17-Dec (7.8) and commissioning specialists (7.13 to 7.17) priced on their own lines'),
  ('25-Dec', 0, 0, 0, 'Demobilisation ends 23-Dec (carried)', 'No approved labour: demobilisation clean-up is line 1.16'),
 ]
 b_first = r
@@ -578,47 +579,67 @@ def btot(label, cells, note, h=None):
 bt1 = btot('Approved histogram totals (man-weeks) and helper man-days', {5: f"=SUM(E{b_first}:E{b_last})", 6: f"=SUM(F{b_first}:F{b_last})", 7: f"=SUM(G{b_first}:G{b_last})", 8: f"=SUM(H{b_first}:H{b_last})", 9: f"=SUM(I{b_first}:I{b_last})"},
            "221 man-weeks: 136 skilled (within Items 3, 6 and 8 on their recorded scopes, not priced again) and 85 helpers (priced). Man-days use the working days of each week")
 bt2 = btot("Helper man-months at 26 working days - 'Build-Up' line 5.10 quantity", {9: f"=ROUND(I{bt1}/26,1)"}, "Conversion for the man-month rate on the 'Build-Up' tab (6-day week)")
-# --- dated helper duties against approved capacity, W13 to W18
+# --- helper duties by week against the approved capacity, W13 onwards (man-days per week, overlapping days shown per duty)
+wk = {i + 1: b_first + i for i in range(len(HISTW))}
 r += 1
-if PG['used'] + 32 + 9 * 32 > PAGE:
-    pg_break(pg, r)
-HDRD = ['Ref', 'Helper duty (dated from the XER activities and the fitted tests)', 'From', 'To', 'People', 'Man-days', 'Approved helper man-days in the same week(s)', 'Treatment', '', 'Basis']
+pg_break(pg, r)
+para(pg, r, ("Dated check. Each helper duty from 14-Nov-2026 to demobilisation is placed on its working days (XER activity dates and the fitted tests, Section 3) "
+             "and its man-days are split by histogram week; the last row compares each week's demand with the approved helper man-days of that week. Where a "
+             "duty's assessed gang would exceed the approved deployment the approved figure governs and the allocation is reduced, as noted. Days after "
+             "11-Dec-2026 have no approved people and are priced on their own lines. Weeks W1 to W12 cannot be checked duty by duty from the documents "
+             "received and are left unresolved."), height=57); r += 1
+HDRD = ['Ref', 'Helper duty and its working days', 'W13 (14 to 20-Nov)', 'W14 (21 to 27-Nov)', 'W15 (28-Nov to 04-Dec)', 'W16 (05 to 10-Dec)', 'After 11-Dec', 'Total man-days', 'Priced at', 'Allocation and basis']
 def hdrd(ws, r_):
-    header(ws, r_, HDRD[:9]); ws.cell(r_, 10, HDRD[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=8, end_row=r_, end_column=9)
+    header(ws, r_, HDRD[:9]); ws.cell(r_, 10, HDRD[9]); cp(S_HDR, ws.cell(r_, 10))
 hdrd(pg, r); pg_add(32); r += 1
 DUTY = {}
-def dadd(ref, duty, frm, to, ppl, md, cap, treat, basis):
+def dadd(ref, duty, w13, w14, w15, w16, after, priced, basis):
     global r
-    hh = max(30, est(duty, 46), est(basis, 52), est(treat, 26))
+    hh = max(30, est(duty, 46), est(basis, 52))
     if PG['used'] + hh > PAGE:
         pg_break(pg, r); hdrd(pg, r); r += 1; pg_add(32)
     pg_add(hh)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, duty); cp(S_DESC, pg.cell(r, 2))
-    for col, v in ((3, frm), (4, to)):
-        c = pg.cell(r, col, v); datecell(c)
-        if v in (None, ''): c.value = '-'
-    for col, v in ((5, ppl), (6, md), (7, cap)):
+    for col, v in ((3, w13), (4, w14), (5, w15), (6, w16), (7, after)):
         c = pg.cell(r, col, v); numcell(c, '#,##0')
-        if v in (None, ''): c.value = '-'
-    pg.cell(r, 8, treat); cp(S_BASIS, pg.cell(r, 8)); cp(S_BASIS, pg.cell(r, 9)); pg.merge_cells(start_row=r, start_column=8, end_row=r, end_column=9)
+    pg.cell(r, 8, f"=SUM(C{r}:G{r})"); numcell(pg.cell(r, 8), '#,##0')
+    pg.cell(r, 9, priced); cp(S_UNIT, pg.cell(r, 9)); pg.cell(r, 9).alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
     pg.cell(r, 10, basis); cp(S_BASIS, pg.cell(r, 10))
     pg.row_dimensions[r].height = hh; DUTY[ref] = r; r += 1
     return r - 1
-wk = {i + 1: b_first + i for i in range(len(HISTW))}
-dadd('H1', 'Tank 2 roof supports and ladder - gang attendance', f"={AS('QCD18TSECONT2INS1040')}", f"={AF('QCD18TSECONT2INS1040')}", 3, f"=E{r}*{AWD('QCD18TSECONT2INS1040')}", f"=H{wk[13]}", 'Within the approved week W13 (36 man-days)', 'Gang of 3 on supports and ladder - assessed; approved W13 helpers 6')
-dadd('H2', 'Tank 1 hydrostatic test - tanker and level attendance during the fill and hold (P18)', f"=F{p18}", f"=G{p18}", 2, f"=E{r}*H{p18}", f"=H{wk[13]}+H{wk[14]}", 'Within the approved weeks W13 and W14', 'Assessed 2 people; specialists (QA/QC 1.3, commissioning engineer 7.13) are not helpers')
-dadd('H3', 'Tank 2 roof panels - gang attendance', f"={AS('QCD18TSECONT2INS1050')}", f"={AF('QCD18TSECONT2INS1050')}", 5, f"=E{r}*{AWD('QCD18TSECONT2INS1050')}", f"=H{wk[14]}", 'Within the approved week W14 (30 man-days) - fully used', "Gang of 5 - the supplier's condition read at its upper range for roof panels")
-dadd('H4', 'Tank 1 disinfection and flushing after its test (AWWA C652), before the transfer', f"={NEXT(f'G{p18}')}", f"={W(NEXT(f'G{p18}'), 5)}", 2, f"=E{r}*5", f"=H{wk[14]}+H{wk[15]}", 'W14 is fully used by H3; fits within W15 (18 man-days) alongside H5', "Assessed 2 people for 5 working days; the chemicals are 7.6 and 7.9")
-dadd('H5', 'Tank 2 nozzles and internals - attendance', f"={AS('QCD18TSECONT2MW2030')}", f"={AF('QCD18TSECONT2MW2030')}", 2, f"=E{r}*{AWD('QCD18TSECONT2MW2030')}", f"=H{wk[15]}", 'Within the approved week W15', 'Assessed 2 people')
-dadd('H6', 'Transfer of the test water, Tank 1 to Tank 2 (P19) - pump and hose attendance', f"=F{p19}", f"=G{p19}", 2, f"=E{r}*H{p19}", f"=H{wk[16]}", "Within the approved week W16 (12 man-days) - so 'Build-Up' line 7.4 is nil", 'Assessed 2 people for the transfer days')
-dadd('H7', 'Tank 2 top-up, hold and inspection attendance (P20) to 11-Dec', f"=F{p20}", f"=MIN(G{p20},DATE(2026,12,11))", 1, f"=E{r}*{WD(f'C{r}', f'D{r}')}", f"=H{wk[16]}", 'Within the approved week W16 with H6 (6 + 4 = 10 of 12)', 'Assessed 1 person')
-dadd('H8', 'Tank 2 inspection on 12-Dec and disinfection and flushing 13 to 17-Dec (after the histogram ends 11-Dec)', f"=DATE(2026,12,12)", f"={W('DATE(2026,12,13)', 5)}", 2, f"=E{r}*5", 0, "Outside the approved weeks: priced at 'Build-Up' line 7.8 (10 man-days)", 'Assessed 2 people for 5 working days, in parallel with the integrated commissioning P21b')
-dadd('H9', 'Integrated commissioning 13 to 15-Dec and demobilisation 16 to 23-Dec', f"=F{p21b}", f"=G{p23}", '-', '-', 0, "Specialists at 7.13 to 7.17 (engineer, technicians, electrician, calibration); clean-up 4 x 3 days at 1.16; no helpers", 'Outside the approved weeks; nothing added beyond the existing lines')
-btd = btot("Helper man-days needed from the fitted tests and the XER activities, W13 to W18, against the approved 114 in W13 to W16", {6: f"=SUM(F{DUTY['H1']}:F{DUTY['H8']})"}, "Weeks W1 to W12 (offloading and panel handling on one then two fronts) cannot be checked duty by duty from the documents received - the panel counts, loads and crew method are not stated - and are left unresolved; the approved figures are carried there without adjustment")
+dadd('H1', 'Tank 2 bracing - gang attendance, 14 to 17-Nov (QCD18TSECONT2INS1060 to its finish)', 12, 0, 0, 0, 0, '5.10', '3 people x 4 working days (14, 15, 16, 17-Nov)')
+dadd('H2', 'Tank 2 roof supports and ladder, 18 to 23-Nov (QCD18TSECONT2INS1040)', 6, 9, 0, 0, 0, '5.10', '3 people: 18, 19-Nov in W13; 21, 22, 23-Nov in W14 (20-Nov is a Friday)')
+dadd('H3', 'Tank 1 hydrostatic test P18, 17 to 24-Nov: tankered fill 17 to 22-Nov, hold 23-Nov, inspection 24-Nov', 6, 5, 0, 0, 0, '5.10', '2 people on the 5 fill days (17, 18, 19-Nov in W13; 21, 22-Nov in W14); none on the hold (level readings by QA/QC, 1.3); 1 on the inspection day 24-Nov')
+dadd('H4', 'Tank 2 roof panels, 24 to 30-Nov (QCD18TSECONT2INS1050)', 0, 15, 9, 0, 0, '5.10', '5 people on 24, 25, 26-Nov (W14); 3 on 28, 29, 30-Nov (W15) - the approved W15 deployment is 3, so the gang is reduced there')
+dadd('H5', 'Tank 2 nozzles and internals attendance, 28-Nov to 02-Dec (QCD18TSECONT2MW2030)', 0, 0, 5, 0, 0, '5.10', "1 person x 5 working days - attendance to the supplier's fitters, reduced from 2 to fit the approved W15 deployment")
+dadd('H6', 'Tank 1 disinfection - dosing and circulation of the retained test water 01 to 02-Dec, contact time unattended, sampling 03-Dec (AWWA C652)', 0, 0, 4, 0, 0, '5.10', '2 people x 2 days; the dosed water is then transferred to Tank 2 (H7), which receives its contact time during its own hold. Chemicals at 7.6')
+dadd('H7', 'Transfer Tank 1 to Tank 2, P19, 05 to 07-Dec - pump and hose attendance', 0, 0, 0, 6, 0, '5.10', "2 people x 3 days; so 'Build-Up' line 7.4 is nil")
+dadd('H8', 'Tank 2 test P20, 08 to 12-Dec: top-up 08-Dec, hold 09-Dec, inspection 10 and 12-Dec (11-Dec is a Friday) - 4 working days elapsed, 3 attended', 0, 0, 0, 2, 1, '5.10 / 7.8', '1 person on 08 and 10-Dec (W16); 1 person on 12-Dec, after the histogram ends (7.8). No one on the hold day')
+dadd('H9', 'Tank 2 sampling 12-Dec; dechlorination and discharge of the test water 16 to 17-Dec, after the integrated commissioning', 0, 0, 0, 0, 5, '7.8', '1 person sampling on 12-Dec; 2 people x 2 days on 16, 17-Dec (within the demobilisation week, site staff present). Chemicals at 7.9')
+dadd('H10', 'Integrated commissioning 13 to 15-Dec (P21b) and demobilisation 16 to 23-Dec (P23)', 0, 0, 0, 0, 0, '7.13 to 7.17; 1.16', 'Specialists only (engineer, technicians, electrician, calibration); demobilisation clean-up 4 x 3 days at 1.16; no helpers')
+dem = r
+pg.cell(r, 2, 'Demand - helper man-days by week'); cp(S_TOTLBL, pg.cell(r, 2))
+for c in (1, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
+for col in range(3, 9):
+    L_ = get_column_letter(col); pg.cell(r, col, f"=SUM({L_}{DUTY['H1']}:{L_}{DUTY['H10']})"); cp(S_TOTAMT, pg.cell(r, col)); pg.cell(r, col).number_format = '#,##0'
+pg.cell(r, 10, "The 'after 11-Dec' column is carried to 'Build-Up' line 7.8"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 19.5; pg_add(19.5); r += 1
+capr = r
+pg.cell(r, 2, 'Available - approved helper man-days of the week (Section 4 weekly table)'); cp(S_TOTLBL, pg.cell(r, 2))
+for c in (1, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
+for col, wkno in ((3, 13), (4, 14), (5, 15), (6, 16)):
+    pg.cell(r, col, f"=H{wk[wkno]}"); cp(S_TOTAMT, pg.cell(r, col)); pg.cell(r, col).number_format = '#,##0'
+pg.cell(r, 7, 0); cp(S_TOTAMT, pg.cell(r, 7)); pg.cell(r, 8, f"=SUM(C{r}:G{r})"); cp(S_TOTAMT, pg.cell(r, 8)); pg.cell(r, 8).number_format = '#,##0'
+pg.cell(r, 10, 'People x working days of the week: W13 6 x 6, W14 5 x 6, W15 3 x 6, W16 2 x 6 (05 to 10-Dec; 11-Dec is a Friday)'); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 30; pg_add(30); r += 1
+chkr = r
+pg.cell(r, 2, 'Spare (available less demand) - must not be negative'); cp(S_TOTLBL, pg.cell(r, 2))
+for c in (1, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
+for col in range(3, 9):
+    L_ = get_column_letter(col); pg.cell(r, col, f"={L_}{capr}-{L_}{dem}"); cp(S_TOTAMT, pg.cell(r, col)); pg.cell(r, col).number_format = '#,##0;-#,##0'
+pg.cell(r, 10, "W15 is fully used; W13, W14 and W16 have spare capacity that is not deducted (the approved figures are carried). The negative 'after' figure is the labour outside the histogram, priced at 7.8"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 30; pg_add(30); r += 1
+AFTER_CELL = f"G{dem}"
 # --- skilled people: allocation by weeks and activities in progress
 r += 1
-if PG['used'] + 32 + 6 * 40 > PAGE:
-    pg_break(pg, r)
+pg_break(pg, r)
 HDRK = ['Ref', 'Skilled people - weeks and activities in progress', 'Weeks', '', 'Man-weeks', 'Allocated to', '', '', '', 'Status of the allocation']
 def hdrk(ws, r_):
     header(ws, r_, HDRK[:9]); ws.cell(r_, 10, HDRK[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=3, end_row=r_, end_column=4); ws.merge_cells(start_row=r_, start_column=6, end_row=r_, end_column=9)
@@ -919,7 +940,7 @@ REG = [
  ('7.5', 104, 'P18 to P20', 'Top-up for losses and test level; Contractor', 'Quantity: 10 per cent of one fill', 'No'),
  ('7.6', 105, 'P18 and P20 (AWWA C652)', 'Disinfection chemicals; Contractor', 'Quantity: 800 kg', 'No'),
  ('7.7', 106, 'P18 and P20', 'Dosing equipment; Contractor', 'Hire: 2 weeks', 'No'),
- ('7.8', 107, 'Duties H4 (Tank 1, within W15) and H8 (Tank 2, 12 to 17-Dec, after the histogram)', 'Disinfection and flushing labour; Contractor helpers', 'Attendance: 2 No. x 5 days for Tank 2 only', 'Tank 1 part within 5.10'),
+ ('7.8', 107, 'Dated check H8 and H9 (12-Dec; 16 to 17-Dec, after the histogram)', 'Tank 2 inspection, sampling, dechlorination and discharge; Contractor helpers', 'Attendance: man-days after 11-Dec from the dated check', 'The Tank 1 dosing (H6) is within 5.10'),
  ('7.9', 108, 'After P20', 'Dechlorination for discharge; Contractor', 'Quantity: 400 kg', 'No'),
  ('7.10', 109, 'P18 and P20', 'Sampling and transport; Contractor', 'Quantity: 2 tanks', 'No'),
  ('7.11', 110, 'P18 and P20', 'Laboratory water-quality tests; third-party laboratory', 'Quantity: 6 samples', "No - excluded by both tank suppliers"),
@@ -1103,8 +1124,9 @@ bu['D111'] = 0
 gset(111, "Not assessed: RFP Scope of Works 5.1 and 5.2 require the tests to be witnessed by the Engineer, not inspected by a third party, and the third-party factory acceptance test is dealt with at 7.23. Previously 2 visits at SAR 2,400.00")
 bu['D103'] = 0
 gset(103, "Nil: the transfer labour is within the approved manpower histogram, whose helper man-days are all priced at 5.10 ('Programme' tab, Section 4, week W16); priced once. Previously 2 No. x 3 days")
-bu['D107'] = 10
-gset(107, "Tank 2 disinfection and flushing, 2 No. x 5 days from 13-Dec-2026, after the approved histogram ends on 11-Dec ('Programme' tab, Section 4, duty H8). The Tank 1 disinfection (H4) falls within the approved helper weeks priced at 5.10 and is not repeated. Previously 2 No. x 10 days")
+bu['D107'] = f"=Programme!{AFTER_CELL}"
+gset(107, "Helper man-days after the approved histogram ends on 11-Dec-2026 ('Programme' tab, Section 4, dated check): Tank 2 inspection and sampling on 12-Dec and dechlorination and discharge of the test water on 16 and 17-Dec, after the integrated commissioning. The dosing of the test water in Tank 1 (01 to 03-Dec) falls within the approved weeks priced at 5.10. Previously 2 No. x 10 days")
+bu['B107'] = 'Disinfection, sampling and discharge labour outside the approved histogram weeks'
 # Item 8
 bu['A127'] = ("External pipework, valves, fittings and instrumentation connecting the two tanks to the confirmed tie-in points (RFP Scope of Works, Piping "
               "Connections and General Piping Requirements); excluded from both tank suppliers' scopes. Priced to the RFP specification: uPVC Schedule 40 "
