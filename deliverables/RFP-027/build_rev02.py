@@ -180,7 +180,9 @@ def para(ws, r, text, ncol=10, height=None, bold=False):
     if bold:
         f = copy.copy(ws.cell(r, 1).font); f = Font(name=f.name, sz=f.sz, b=True, color=f.color); ws.cell(r, 1).font = f
     mw = sum((ws.column_dimensions[get_column_letter(c)].width or 8.66) for c in range(1, ncol + 1))
-    ws.row_dimensions[r].height = max(height or 15, est(text, mw))
+    cpl = max(8, mw * 1.15)
+    need = sum(max(1, math.ceil(len(p) / cpl)) for p in text.split('\n')) * 12.8 + 6
+    ws.row_dimensions[r].height = max(height or 15, need)
 
 def header(ws, r, labels, merge_ij=False):
     for i, t in enumerate(labels, 1):
@@ -220,32 +222,27 @@ def numcell(c, fmt='#,##0'):
 pg['A1'] = "THE CONTRACTOR'S PROGRAMME - ACTIVITY DATA AND DURATION BASES"; cp(S_TITLE, pg['A1']); pg.row_dimensions[1].height = 25.5
 pg['A2'] = 'TSE Irrigation Storage Tanks and Associated Pipeworks (RFP-027) - Contract QPMO-410-CT-05958'; cp(S_SUB, pg['A2']); pg.row_dimensions[2].height = 17.4
 pg['A3'] = f'Contractor: SAMA Construction   |   Engineer: KEO   |   Cost Consultant: WT Partnership   |   {REV}, {DOCDATE}'; cp(S_SUB2, pg['A3'])
-para(pg, 4, ("How this tab works. The Contractor's programme is imported as received on the 'XER WBS' tab. Section 1 records its status. Section 2 is the "
-             "working calendar. Section 3 turns the activities into the windows the assessment needs: the submitted programme beside the assessment allowance "
-             "(the Engineer's one-fill testing fitted to the submitted erection dates), every date looked up by activity ID. Section 4 is the resource bridge: the "
-             "approved manpower histogram week by week, plant days from the activity dates, site staff by phase. Section 5 lists every 'Build-Up' quantity taken "
-             "from this tab. Section 6 links every 'Build-Up' line to its activities. Blue figures are links: a reference in column A opens the 'Build-Up' line, a "
-             "date or count opens its source row. Units: 'working days' exclude Fridays; 'calendar days' count every day; a month is 30.4 calendar days; a "
-             "man-day is one person for one working day. All amounts exclude VAT."), height=84)
+para(pg, 4, ("How this tab works\n"
+    "• 'XER WBS' tab: SAMA's programme as received. Section 1: programme status. Section 2: working calendar.\n"
+    "• Section 3: programme windows - SAMA Submitted Programme dates beside the Assessed dates (same erection dates, one-fill sequential testing).\n"
+    "• Section 4: the approved manpower histogram week by week, helper duties day by day, skilled people by activity, plant days, site staff by phase.\n"
+    "• Section 5: every 'Build-Up' quantity taken from this tab. Section 6: every 'Build-Up' line linked to its activities.\n"
+    "• Blue figures are links: column A opens the 'Build-Up' line; a date or count opens its source row.\n"
+    "• Units: working days exclude Fridays; calendar days count every day; a month is 30.4 calendar days; a person-day is one person for one working day. Amounts exclude VAT."), height=84)
 
 # Section 1 - status
 banner(pg, 6, '1. STATUS OF THE PROGRAMME AND OF THE INSTRUCTION')
-para(pg, 7, (f"Programme: baseline schedule 'QC05958-BSL01THF-TSE-Final' ({XER}, data date 01-Jul-2026, 81 activities, cost-loaded to the "
-             "proposal value of SAR 8,110,296.62 including 5 per cent Overhead and Profit), submitted by the Contractor to the Engineer on "
-             "12-Sep-2026 and issued to the Cost Consultant on 29-Sep-2026 with a cost S-curve, a monthly cash flow, a weekly direct-manpower "
-             "histogram and a two-week look-ahead (data date 28-Sep-2026). Status at 30-Sep-2026: under the Engineer's approval process - "
-             "returned as acceptable with minor comments, a procurement schedule being required; not approved. The programme is therefore "
-             "evidence of the Contractor's intended sequence and durations, not an agreed basis; every line on the 'Build-Up' tab that relies "
-             "on it says so."), height=70)
-para(pg, 8, ("Instruction: the Contractor has been instructed to proceed and is on site (the existing tank is dismantled and the Tank 1 base "
-             "panels are being received). The instruction reference and date have not been supplied to the Cost Consultant and are to be "
-             "recorded on the 'Project Info' tab when received. RFP-027 dated 28-Jun-2026 stated that it was not itself an instruction to "
-             "proceed. The instruction affects entitlement and the certification route, not the assessed value."), height=44)
-para(pg, 9, ("How the programme is used: (i) the site period as submitted - its end is fixed by the pump-room readiness date of 03-Dec-2026 and the tie-in, "
-             "testing and demobilisation after it; (ii) the erection windows and durations as submitted, with labour and plant priced for those durations (Section 4); "
-             "(iii) testing on the Engineer's one-fill basis of 30-Aug-2026, fitted to the submitted dates. The Contractor's slippage (Tank 1 base panels forecast to "
-             "start 30-Sep-2026 against 12-Sep-2026 programmed) is its own delivery problem and adds nothing. Dates after the look-ahead date of 28-Sep-2026 are "
-             "forecasts."), height=57)
+para(pg, 7, (f"Programme\n"
+    f"• Baseline 'QC05958-BSL01THF-TSE-Final' ({XER}): data date 01-Jul-2026, 81 activities, cost-loaded to SAR 8,110,296.62 including 5 per cent Overhead and Profit.\n"
+    "• Submitted to the Engineer 12-Sep-2026; issued to the Cost Consultant 29-Sep-2026 with S-curve, cash flow, manpower histogram and two-week look-ahead (data date 28-Sep-2026).\n"
+    "• Status 30-Sep-2026: under the Engineer's approval - acceptable with minor comments, procurement schedule required; not approved. Used as evidence of SAMA's intended sequence and durations, not as an agreed basis."), height=70)
+para(pg, 8, ("Instruction\n"
+    "• SAMA has been instructed to proceed and is on site (existing tank dismantled; Tank 1 base panels being received). Reference and date not yet supplied; to be recorded on 'Project Info'.\n"
+    "• The instruction affects entitlement and certification, not the assessed value."), height=44)
+para(pg, 9, ("How the programme is used\n"
+    "• Site period: as submitted; its end is fixed by the pump-room readiness date 03-Dec-2026 and the tie-in, testing and demobilisation after it.\n"
+    "• Erection windows and durations: as submitted; labour and plant priced for those durations (Section 4). Testing: the Engineer's one-fill basis (email 30-Aug-2026) fitted to the submitted dates.\n"
+    "• SAMA's slippage (Tank 1 base panels forecast 30-Sep against 12-Sep programmed) is its own delivery risk and adds nothing. Dates after 28-Sep-2026 are forecasts."), height=57)
 
 # Section 2 - calendar
 banner(pg, 11, '2. WORKING CALENDAR')
@@ -308,10 +305,10 @@ assert len(acts) == 81 and abs(sum(a['cost'] for a in acts) - 8110296.62) < 0.05
 
 # --- Section 3 layout
 banner(pg, 17, '3. PROGRAMME WINDOWS - THE SUBMITTED PROGRAMME, AND THE ASSESSMENT ALLOWANCE BUILT ON ITS ERECTION DATES WITH SEQUENTIAL TESTING')
-para(pg, 18, ("Two sets of dates. 'Submitted programme' (columns C to E) reproduces the Contractor's programme, including its parallel testing of both tanks. "
-              "'Assessment allowance' (columns F to H, yellow border) keeps every erection date as submitted and fits in the Engineer's one-fill sequential testing "
-              "and the demobilisation after it; these are the dates the assessment uses. Every source date is looked up from the 'XER WBS' tab by activity ID - "
-              "click a blue date to open the activity there. The people and plant for these windows are in Section 4."), height=58)
+para(pg, 18, ("Two sets of dates\n"
+    "• Columns C to E: SAMA Submitted Programme, including its parallel testing of both tanks.\n"
+    "• Columns F to H (yellow border): Assessed - the same erection dates, with the Engineer's one-fill sequential testing and the demobilisation fitted in. These are the dates used.\n"
+    "• Every source date is looked up on 'XER WBS' by activity ID; click a blue date to open it. People and plant for these windows: Section 4."), height=58)
 header(pg, 19, HDR3, merge_ij=True)
 PG['used'] = sum((pg.row_dimensions[i].height or 14.4) for i in range(1, 20))
 
@@ -537,20 +534,13 @@ d7 = add3('D7', 'Storage containers window - first panels on site to last roof p
 if PG['used'] + 120 > PAGE:
     pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(PG['hdr'])
 pg_add(120)
-para(pg, r, ("Provisional commissioning method, both tanks - for the Contractor's method statement and the Engineer's acceptance; nothing here is verified. "
-             "HYDROSTATIC TEST WATER: (1) Tank 1 filled by tanker to the 3.7 m test level, 3,774 m3 ('Build-Up' 7.1), held 24 hours and inspected (P18). (2) The water is "
-             "pumped to Tank 2 once Tank 2 is complete (P19, 3 days); Tank 1 is then empty apart from the dead volume below its outlet - the two tanks are never full at "
-             "the same time. (3) Tank 2 topped up (7.5), held 24 hours, inspected and sampled (P20). DISINFECTION: the test water is dosed with hypochlorite in Tank 1 "
-             "(7.6, 7.7), circulated and sampled (7.10, 7.11) before the transfer, and boosted in Tank 2 after it; this covers the wetted surfaces only, so the surfaces "
-             "above the test level in both tanks are sprayed separately (7.25) - Tank 2 before it receives water, Tank 1 after it is emptied. FUNCTIONAL COMMISSIONING: "
-             "the component checks follow the tie-in (P21); the integrated demonstration (P21b) needs both tanks connected and holding water, so Tank 2 keeps the test "
-             "water (dechlorinated in the tank, 7.9) and Tank 1 receives an operating fill of about 1,020 m3 by tanker on 09 and 10-Dec (P20b, 7.24), attended within "
-             "the approved helpers. A refill from the network after the tie-in is not assumed: the Employer has confirmed neither a source nor that it is free; a "
-             "demonstration of Tank 1 on its valves and instruments alone is not established as meeting RFP Scope of Works 5.2. RELEASE CONDITIONS: the integrated "
-             "commissioning starts only after the Tank 2 hydrostatic pass, the Engineer's acceptance of the water samples and the tie-in; a laboratory turnaround longer "
-             "than one working day moves P21b day for day. After acceptance the water is kept as first stock if the Employer so instructs, otherwise dechlorinated and "
-             "discharged (7.9). NOT ESTABLISHED: the water source and price, the disinfection method, the depth the Engineer requires in Tank 1 (a full fill is "
-             "sensitivity S8) and the disposal route; until the method statement is accepted, Item 7 is an assessment allowance."), height=170); r += 1
+para(pg, r, ("Provisional commissioning method, both tanks - for SAMA's method statement and the Engineer's acceptance; not verified\n"
+    "• Hydrostatic test water: Tank 1 filled by tanker to 3.7 m, 3,774 m3 (7.1), 24-hour hold, inspected (P18). Pumped to Tank 2 once Tank 2 is complete (P19, 3 days); Tank 1 is then empty, so the tanks are never full together. Tank 2 topped up (7.5), held, inspected, sampled (P20).\n"
+    "• Disinfection: the test water is dosed with hypochlorite in Tank 1 (7.6, 7.7), circulated, sampled (7.10, 7.11) and boosted in Tank 2. That covers wetted surfaces only; surfaces above the test level are sprayed separately (7.25) - Tank 2 before it receives water, Tank 1 after it is emptied.\n"
+    "• Functional commissioning: component checks after the tie-in (P21). The integrated demonstration (P21b) needs both tanks connected and holding water: Tank 2 keeps the test water (dechlorinated, 7.9); Tank 1 receives a 1,020 m3 tanker fill on 09 to 10-Dec (P20b, 7.24) within the approved helpers.\n"
+    "• Not assumed: a network refill after the tie-in (no source or cost confirmed); a Tank 1 demonstration on valves and instruments alone (not shown to meet RFP Scope of Works 5.2).\n"
+    "• Release: integrated commissioning starts after the Tank 2 hydrostatic pass, sample acceptance and the tie-in; a laboratory turnaround over one working day moves P21b day for day. Water kept as first stock if the Employer instructs, otherwise dechlorinated and discharged (7.9).\n"
+    "• Not established: water source and price, disinfection method, depth required in Tank 1 (full fill = S8), disposal route. Item 7 is an Assessed allowance until the method statement is accepted."), height=170); r += 1
 # --- sensitivity block
 if PG['used'] + 19.5 + 70 > PAGE:
     pg_break(pg, r); header(pg, r, HDR3, merge_ij=True); r += 1; pg_add(PG['hdr'])
@@ -579,28 +569,15 @@ r += 1
 pg_break_if(pg, r, 21 + 3 * 60 + 83 + 32 + 60)
 pg_add(21 + 3 * 60)
 banner(pg, r, "4. RESOURCE BRIDGE - THE APPROVED MANPOWER HISTOGRAM RECONCILED TO THE PRICED LINES"); r += 1
-para(pg, r, ("Approved baseline. The Contractor's weekly direct-manpower histogram (workbook 'SAMA-D18 -THS-TSE - Cost S-Curves Cash Flow Manpower Histogram.xlsx', "
-             "sheet 'MP-HST-WK': 221 man-weeks, 136 skilled and 85 helpers, peak 35 in the week ending 30-Oct-2026) has been approved and is taken as the "
-             "resource baseline. Its weekly figures are reproduced below unchanged. Approval of the histogram does not identify whose people they are, "
-             "approve any rate, or make the labour payable by itself, and it does not extend to the programme, which remains under approval."), height=57); r += 1
-para(pg, r, ("Reading the figures. The source sheet gives 'Total', 'Skilled Labor' and 'Helper' per week without saying whether each is the average or the peak "
-             "daily deployment; it is read here as the number of people deployed through the week (an assumption - if it is a peak-day count the man-days are "
-             "overstated). A man-week is one person for the working days of that week on the 'QIC 6 Days 10 Hrs' calendar: 6 days, or 5 in the week "
-             "containing 23-Sep-2026; man-days are people multiplied by that count, not a flat 6. Days are counted inclusively (finish minus start plus one) "
-             "and months at 30.4 calendar days, rounded to one decimal place."), height=57); r += 1
-para(pg, r, ("Skilled people. The histogram does not say who employs them. They are allocated below to the activities in progress in each week - dismantling "
-             "(Item 3 quotation, recorded scope), tank erection (Item 6, supply-and-install scope as described in 'Build-Up' Assumption 9), pipework and tie-in (Item 8 supplied-and-installed "
-             "rates) - and none is priced again, because each of those scopes already carries its own labour. Where a week's skilled people could belong to "
-             "more than one scope, or to the Contractor's own mobilisation, the allocation is marked unresolved; the cost effect if they prove to be the "
-             "Contractor's own people outside those scopes is bounded at S5 ('Build-Up Comparison' tab, Section 7, item 10)."), height=57); r += 1
-para(pg, r, ("Helpers. Every approved helper man-day is priced once at 'Build-Up' line 5.10, provisionally including the dismantling weeks, where the helpers "
-             "may instead be within the subcontractor's crew (S7). Duties that fall inside the approved weeks and within the approved capacity are not "
-             "priced again (transfer labour 7.4); duties after the histogram ends on 11-Dec-2026, or that do not fit the approved capacity, are priced on "
-             "their own lines (Tank 2 sampling and discharge at 7.8, clean-up at 1.16). The dated check is in the table after the weekly figures. Specialists "
-             "(commissioning engineer, technicians, electrician, calibration, tie-in fitters, pipework testing crew) are not helpers and are priced in Items 7 "
-             "and 8. No productivity or crew-sharing adjustment is made to the approved figures; whether each week's helpers were fully occupied cannot be "
-             "verified from the documents received and is left unresolved."), height=83); r += 1
-HDRB = ['Ref', 'Week ending (histogram week) - phase', 'Erection activities in progress (XER)', 'Working days in week', 'Approved total', 'Approved skilled', 'Approved helpers', 'Helper man-days (people x days)', "Helper man-days priced at 5.10", 'Skilled people - where already paid; helper duties; adjustment']
+para(pg, r, ("The approved histogram - what the figures are\n"
+    "• Source: SAMA's weekly direct-manpower histogram (workbook 'SAMA-D18 -THS-TSE - Cost S-Curves Cash Flow Manpower Histogram.xlsx', sheet 'MP-HST-WK'), approved: 221 person-weeks - 136 skilled, 85 helpers; peak 35 in the week ending 30-Oct-2026. Reproduced below unchanged.\n"
+    "• Columns E to G are people deployed in that week (a weekly headcount): 8 in W1 means 8 people through the week. Person-days (column H) = people x the actual working days of that week (6, or 5 in the week containing 23-Sep-2026). The totals row gives person-weeks.\n"
+    "• Assumption: if the histogram gives a peak day rather than the people through the week, the person-days are overstated. Approval of the histogram does not say whose people they are, approve any rate or make the labour payable by itself."), height=84); r += 1
+para(pg, r, ("Whose people, and where they are paid\n"
+    "• Skilled: the tank supplier installs the tanks (Assumption 9 on the 'Build-Up' tab), so the erection crews are the supplier's, inside the Item 6 price. Dismantling crew: inside the Item 3 quotation. Pipework and tie-in fitters: inside the Item 8 installed rates. None is priced again; the exceptions are marked in the skilled table (K1, K5).\n"
+    "• Helpers: the supplier excludes helpers, so all 85 approved helper person-weeks are SAMA's and are priced once at 'Build-Up' 5.10 (the dismantling weeks provisionally, S7). Duties after 11-Dec-2026 are priced at 7.8; days needing more helpers than approved are priced as 'Additional helpers assessed' below.\n"
+    "• Specialists (commissioning engineer, technicians, electrician, calibration, tie-in fitters, pipework testing crew) are not helpers; priced in Items 7 and 8. No productivity adjustment is made to the approved figures."), height=84); r += 1
+HDRB = ['Ref', 'Week ending (histogram week) - phase', 'Erection activities in progress (count; click for the first, IDs in the note)', 'Working days in week', 'Approved total (people in the week)', 'Approved skilled (people in the week)', 'Approved helpers (people in the week)', 'Helper person-days (people x working days)', 'Helper person-days priced at 5.10', 'Whose people and where paid; activities counted']
 def hdrb(ws, r_):
     header(ws, r_, HDRB[:9]); ws.cell(r_, 10, HDRB[9]); cp(S_HDR, ws.cell(r_, 10))
 pg_break_if(pg, r, 32 + 18 * 38 + 2 * 42)   # the weekly histogram table stays on one page
@@ -642,6 +619,9 @@ for i, (lab, tot_, sk, hp, phase, note) in enumerate(HISTW):
     pg.cell(r, 8, f"=G{r}*D{r}"); numcell(pg.cell(r, 8), '#,##0')
     pg.cell(r, 9, f"=H{r}"); numcell(pg.cell(r, 9), '#,##0')
     pg.cell(r, 9).border = Border(left=Side(style='medium', color='FFC425'), right=Side(style='medium', color='FFC425'), top=Side(style='thin', color='D9D9D9'), bottom=Side(style='thin', color='D9D9D9'))
+    live_ = [a['id'] for a in acts if 'Tank Installation' in a['sec'] and a['start'] <= we and a['finish'] >= ws_]
+    note = note + (' Counted: ' + ', '.join(live_) if live_ else '')
+    h = max(h, est(note, 52))
     pg.cell(r, 10, note); cp(S_BASIS, pg.cell(r, 10))
     pg.row_dimensions[r].height = h
     r += 1; wk_end += _dt.timedelta(7)
@@ -666,12 +646,10 @@ wk = {int(str(pg.cell(rr, 1).value)[1:]): rr for rr in range(b_first, b_last + 1
 assert len(wk) == len(HISTW), wk
 r += 1
 pg_break_if(pg, r, 83 + 32 + 3 * 30)
-para(pg, r, ("Dated check. Each helper duty from 14-Nov-2026 to demobilisation is placed on its working days (XER activity dates and the fitted tests, Section 3) "
-             "and its man-days are split by histogram week; the last row compares each week's demand with the approved helper man-days of that week. Where a "
-             "duty's assessed gang would exceed the approved deployment the approved figure governs and the allocation is reduced, as noted. Days after "
-             "11-Dec-2026 have no approved people and are priced on their own lines. Weeks W1 to W12 cannot be checked duty by duty from the documents "
-             "received and are left unresolved."), height=57); r += 1
-HDRD = ['Ref', 'Helper duty and its working days', 'W13 (14 to 20-Nov)', 'W14 (21 to 27-Nov)', 'W15 (28-Nov to 04-Dec)', 'W16 (05 to 10-Dec)', 'After 11-Dec', 'Total man-days', 'Priced at', 'Allocation and basis']
+para(pg, r, ("Dated check - do the helper duties fit inside the approved helpers?\n"
+    "• Each helper duty from 14-Nov-2026 to demobilisation is placed on its working days (XER dates and the fitted tests, Section 3); person-days = people x days, split by histogram week.\n"
+    "• Demand is compared with the approved helper person-days of the same week. Days after 11-Dec-2026 have no approved people and are priced at 7.8. Weeks W1 to W12 cannot be checked duty by duty from the documents received."), height=57); r += 1
+HDRD = ['Ref', 'Helper duty and its working days', 'W13 (14 to 20-Nov) person-days', 'W14 (21 to 27-Nov) person-days', 'W15 (28-Nov to 04-Dec) person-days', 'W16 (05 to 10-Dec) person-days', 'After 11-Dec person-days', 'Total person-days', 'Priced at', 'People x days, and basis']
 def hdrd(ws, r_):
     header(ws, r_, HDRD[:9]); ws.cell(r_, 10, HDRD[9]); cp(S_HDR, ws.cell(r_, 10))
 hdrd(pg, r); pg_add(PG['hdr']); r += 1
@@ -721,12 +699,12 @@ pg.cell(r, 2, 'Spare (available less demand) - must not be negative'); cp(S_TOTL
 for c in (1, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
 for col in range(3, 9):
     L_ = get_column_letter(col); pg.cell(r, col, f"={L_}{capr}-{L_}{dem}"); cp(S_TOTAMT, pg.cell(r, col)); pg.cell(r, col).number_format = '#,##0;-#,##0'
-pg.cell(r, 10, "Spare weeks are not deducted (the approved figures are carried). A negative week is a shortfall against the approved deployment, priced as the departure below; the negative 'after' figure is the labour outside the histogram, priced at 7.8"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 30; pg_add(30); r += 1
+pg.cell(r, 10, "Spare is unused approved capacity; it is not deducted - the approved people are paid as approved. A negative week is a shortfall, priced as 'Additional helpers assessed' below; the negative 'after' figure is labour outside the histogram, priced at 7.8"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 30; pg_add(30); r += 1
 depr = r
-pg.cell(r, 2, "Departure from the approved deployment - helper man-days above the approved people on the days concerned (daily table), priced at 5.10"); cp(S_TOTLBL, pg.cell(r, 2))
+pg.cell(r, 2, "Additional helpers assessed - person-days above the approved people on the days concerned (daily check), priced at 5.10"); cp(S_TOTLBL, pg.cell(r, 2))
 for c in (1, 3, 4, 5, 6, 7, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
 pg.cell(r, 8, 0); cp(S_TOTAMT, pg.cell(r, 8)); pg.cell(r, 8).number_format = '#,##0'
-pg.cell(r, 10, "Counted day by day, not netted across the week: spare people on other days cannot cover a peak. W15: the Tank 2 roof panels (5 people, the gang the Contractor deployed for the Tank 1 roof in W11) and the nozzle attendance overlap on 28, 29 and 30-Nov, 6 a day against the approved 3. Reason: concurrent supplier tasks on Tank 2 that the approved figure does not cover; an assessed departure, not a productivity claim"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 57; pg_add(57); r += 1
+pg.cell(r, 10, "28, 29 and 30-Nov: needed 6 (roof panels 5 + nozzle attendance 1), approved 3; additional 3 a day x 3 days = 9 person-days, added to 5.10. Counted day by day - spare people on other days cannot cover a peak. The 5-person roof gang is an assessment assumption (the gang SAMA used on the Tank 1 roof), not a measured productivity"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 57; pg_add(57); r += 1
 AFTER_CELL = f"G{dem}"
 DEP_CELL = f"H{depr}"
 # --- daily peak-demand check, W13 to W16
@@ -735,8 +713,9 @@ pg_break_if(pg, r, 30 + 32 + 4 * 16)
 HDRY = ['Ref', 'Working day - duties in progress (from the rows above)', 'Helpers needed', 'Approved a day', 'Spare', '', '', '', '', 'Note']
 def hdry(ws, r_):
     header(ws, r_, HDRY[:9]); ws.cell(r_, 10, HDRY[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=6, end_row=r_, end_column=9)
-para(pg, r, ("Daily check. The duties above are placed on their working days; the peak on each day is set against the approved people of that week. A day above the "
-             "approved figure is covered by the departure row, not by trimming the duty."), height=30); r += 1
+para(pg, r, ("Daily check - a week can balance while a single day does not\n"
+    "• Each working day lists the duties running that day and the helpers they need, against the approved people of that week. Spare = unused approved people, not a deduction.\n"
+    "• A day needing more people than approved is a shortfall; the shortfalls are added and priced as 'Additional helpers assessed' (5.10). No duty is trimmed to fit."), height=44); r += 1
 hdry(pg, r); pg_add(PG['hdr']); r += 1
 DAILY = [
  ('14-Nov-2026', 'H1 bracing 3', 3, 13, ''), ('15-Nov-2026', 'H1 bracing 3', 3, 13, ''), ('16-Nov-2026', 'H1 bracing 3', 3, 13, ''),
@@ -761,7 +740,7 @@ for day, duties, need, wkno, note in DAILY:
 d_last = r - 1
 if PG['used'] + 30 > PAGE:
     pg_break(pg, r); hdry(pg, r); r += 1
-pg.cell(r, 2, 'Sum of the daily shortfalls - the departure carried to the weekly table and to 5.10'); cp(S_TOTLBL, pg.cell(r, 2))
+pg.cell(r, 2, 'Additional helpers assessed - sum of the daily shortfalls, taken to the weekly table and to 5.10'); cp(S_TOTLBL, pg.cell(r, 2))
 for c in (1, 3, 4, 6, 7, 8, 9, 10): cp(S_TOTLBL, pg.cell(r, c))
 pg.cell(r, 5, f'=-SUMIF(E{d_first}:E{d_last},"<0")'); cp(S_TOTAMT, pg.cell(r, 5)); pg.cell(r, 5).number_format = '#,##0'
 pg.cell(r, 10, "28, 29 and 30-Nov: 3 people a day above the approved deployment"); cp(S_BASIS, pg.cell(r, 10)); pg.row_dimensions[r].height = 19.5; pg_add(19.5)
@@ -772,7 +751,7 @@ pg.cell(bt2, 9).value = pg.cell(bt2, 9).value.replace('DEPARTURE', DEP_CELL)
 # --- skilled people: allocation by weeks and activities in progress
 r += 1
 pg_break_if(pg, r, 32 + 3 * 30)
-HDRK = ['Ref', 'Skilled people - weeks and activities in progress', 'Weeks', '', 'Man-weeks', 'Allocated to', '', '', '', 'Status of the allocation']
+HDRK = ['Ref', 'Skilled people - weeks and activities in progress', 'Weeks', '', 'Person-weeks', 'Whose people, and where paid', '', '', '', 'Basis and what is unresolved']
 def hdrk(ws, r_):
     header(ws, r_, HDRK[:9]); ws.cell(r_, 10, HDRK[9]); cp(S_HDR, ws.cell(r_, 10)); ws.merge_cells(start_row=r_, start_column=3, end_row=r_, end_column=4); ws.merge_cells(start_row=r_, start_column=6, end_row=r_, end_column=9)
 hdrk(pg, r); pg_add(PG['hdr']); r += 1
@@ -791,12 +770,12 @@ def kadd(ref, grp, weeks, mw, alloc, status):
     pg.merge_cells(start_row=r, start_column=6, end_row=r, end_column=9)
     pg.cell(r, 10, status); cp(S_BASIS, pg.cell(r, 10))
     pg.row_dimensions[r].height = hh; SK[ref] = r; r += 1
-kadd('K1', 'Mobilisation (22 to 26-Aug) and dismantling start (27-Aug)', 'W1', f"=F{wk[1]}", "Contractor's mobilisation riggers, or the Item 3 dismantling crew", 'Unresolved - split unknown; if Contractor\'s own mobilisation labour, it is not in any priced line (S5 bounds it)')
-kadd('K2', 'Dismantling in progress (QCD18TSECONDSM1020 to 1030)', 'W2 to W3', f"=F{wk[2]}+F{wk[3]}", 'Dismantling crew within the Al Mousa quotation S04647 (Item 3, recorded scope)', 'Provisional on the recorded scope; the quotation is not attached')
-kadd('K3', 'Tank 1 erection only (QCD18TSECONT1INS1020 to 1060)', 'W4 to W9', f"=SUM(F{wk[4]}:F{wk[9]})", "Tank erection crew within the supplier's supply-and-install price (Item 6)", "On the supplier scope as described ('Build-Up' Assumption 9): the supplier installs, so its crew is within Item 6; provisional until the Al Mousa offer is produced")
-kadd('K4', 'Two erection fronts (Tank 1 bracing, roof; Tank 2 base, walls, bracing)', 'W10 to W11', f"=F{wk[10]}+F{wk[11]}", 'Two erection crews within Item 6', 'As K3')
-kadd('K5', 'Erection, mechanical works and pipework installation overlapping (QCD18TSECONT1MW2055 from 12-Nov; QCD18TSECONT2MW2020)', 'W12 to W15', f"=SUM(F{wk[12]}:F{wk[15]})", 'Erection crews (Item 6) and pipework fitters (Item 8 supplied-and-installed rates)', 'Split between Items 6 and 8 unresolved; both scopes carry their own labour, so no separate price either way')
-kadd('K6', 'Tie-in, transfer and tests (QCD18TSECONTC2040, P19, P20)', 'W16', f"=F{wk[16]}", 'Tie-in fitters within 8.14 and 8.15; test supervision within Item 6', 'As K5')
+kadd('K1', 'Mobilisation (22 to 26-Aug) and dismantling start (27-Aug)', 'W1', f"=F{wk[1]}", "SAMA's mobilisation riggers, or the Item 3 dismantling crew", "Unresolved: if SAMA's own people, they are in no priced line (bounded at S5)")
+kadd('K2', 'Dismantling in progress (QCD18TSECONDSM1020 to 1030)', 'W2 to W3', f"=F{wk[2]}+F{wk[3]}", 'Dismantling crew, inside the Item 3 quotation (Al Mousa S04647)', 'Provisional: quotation scope as recorded, not attached')
+kadd('K3', 'Tank 1 erection only (QCD18TSECONT1INS1020 to 1060)', 'W4 to W9', f"=SUM(F{wk[4]}:F{wk[9]})", "Supplier's erection crew, inside Item 6", "The supplier installs (Assumption 9); provisional until the Al Mousa offer is produced")
+kadd('K4', 'Two erection fronts (Tank 1 bracing, roof; Tank 2 base, walls, bracing)', 'W10 to W11', f"=F{wk[10]}+F{wk[11]}", "Two supplier erection crews, inside Item 6", 'As K3')
+kadd('K5', 'Erection, mechanical works and pipework installation overlapping (QCD18TSECONT1MW2055 from 12-Nov; QCD18TSECONT2MW2020)', 'W12 to W15', f"=SUM(F{wk[12]}:F{wk[15]})", "Supplier's erection crews (Item 6) and pipework fitters (Item 8 installed rates)", 'Split between Items 6 and 8 unresolved; both prices include their own labour, so nothing extra either way')
+kadd('K6', 'Tie-in, transfer and tests (QCD18TSECONTC2040, P19, P20)', 'W16', f"=F{wk[16]}", 'Tie-in fitters (8.14, 8.15); test supervision (Item 6)', 'As K5')
 btk = btot("Skilled man-weeks allocated (equals the approved 136); none priced separately", {5: f"=SUM(E{SK['K1']}:E{SK['K6']})"}, "If any group proves to be the Contractor's own people outside the recorded scopes, the effect is bounded at S5 and Item 6 would need re-basing to a supply-only price")
 # --- plant, formula-linked to the XER activity IDs
 r += 1
@@ -811,7 +790,10 @@ def padd(ref, name, frm, to, wd, hire, note, h=None):
     global r
     hh = max(30, est(name, 46), est(note, 52), h or 0)
     if PG['used'] + hh > PAGE:
+        old_r = r
         pg_break(pg, r); hdrp(pg, r); r += 1; pg_add(PG['hdr'])
+        fix = lambda v: re.sub(r'(?<![A-Z$])([C-H])' + str(old_r) + r'(?!\d)', lambda m: m.group(1) + str(r), v) if isinstance(v, str) else v
+        frm, to, wd, hire = map(fix, (frm, to, wd, hire))
     pg_add(hh)
     pg.cell(r, 1, ref); cp(S_REF, pg.cell(r, 1)); pg.cell(r, 2, name); cp(S_DESC, pg.cell(r, 2))
     for col, v in ((3, frm), (4, to)):
@@ -879,10 +861,9 @@ if PG['used'] + 21 + 44 + 32 + 60 > PAGE:
     pg_break(pg, r)
 pg_add(21 + 44 + 32)
 banner(pg, r, "5. QUANTITIES TAKEN FROM THE PROGRAMME - THE FIGURES USED ON THE 'BUILD-UP' TAB, WITH THE SUBMITTED PROGRAMME FOR COMPARISON"); r += 1
-para(pg, r, ("How to read this table: the yellow-bordered column G is the quantity used on the 'Build-Up' tab (click a reference in column A to open that line). "
-             "The grey columns are for comparison only: the Rev 01 quantity and what the same line would be on the programme exactly as submitted (parallel testing, "
-             "every submitted day paid). Column J says which programme window or resource row the quantity is built from - click the figure in column G to open it. "
-             "Lines not listed are unchanged from Rev 01 because the programme does not affect them."), height=58); r += 1
+para(pg, r, ("How to read this table\n"
+    "• Column G (yellow border): the quantity used on the 'Build-Up' tab. Click column A to open the line; click the figure in G to open the row it is built from (column J names it).\n"
+    "• Grey columns: comparison only - the Rev 01 quantity, and the quantity on the SAMA Submitted Programme exactly as submitted (parallel testing, every submitted day paid). Lines not listed are unchanged from Rev 01."), height=58); r += 1
 hdr4(pg, r)
 HDR4ROW = r; r += 1
 
@@ -1127,10 +1108,9 @@ r += 1
 pg_break(pg, r)
 pg_add(21 + 60 + 32)
 banner(pg, r, "6. LINK REGISTER - EVERY 'BUILD-UP' LINE TO ITS PROGRAMME ACTIVITIES OR SITE SERVICE"); r += 1
-para(pg, r, ("One row for each line on the 'Build-Up' tab: the activities or the site service it serves, what the money buys and when the work can happen, who "
-             "performs or provides it, the basis (fixed sum, measured quantity, attendance or hire), whether the same work is paid elsewhere, and the assessed "
-             "amount linked from the 'Build-Up' tab. Lines that serve the whole site are shown as site services rather than tied to an activity they do not "
-             "belong to. A resource that serves several activities is charged once, on the row where it is priced."), height=60); r += 1
+para(pg, r, ("Link register\n"
+    "• One row per 'Build-Up' line: the activities or site service it serves; what it buys, when and who provides it; the basis; whether paid elsewhere; the Assessed amount linked from the 'Build-Up' tab.\n"
+    "• Whole-site lines are shown as site services. A resource serving several activities is charged once, where it is priced."), height=48); r += 1
 HDRG = ['Ref', "'Build-Up' line (as described there)", 'Programme activities or site service', '', 'What it buys, when it can happen, who provides it', '', 'Basis: fixed, quantity, attendance or hire', '', 'Paid elsewhere?', 'Assessed (SAR)']
 def hdrg(ws, r_):
     header(ws, r_, HDRG[:9]); ws.cell(r_, 10, HDRG[9]); cp(S_HDR, ws.cell(r_, 10))
@@ -1542,6 +1522,8 @@ def navlink(ws, row, col, text, target, ncol=None):
 ASM_ITEM_ROW = {8: 1, 10: 2, 12: 3, 13: 4, 14: 5, 16: 6, 17: 7, 18: 8}
 PHRASES = [
  (re.compile(r"carried to 'Assessment'!J(\d+)"), lambda m: f"goes to 'Assessment' item {ASM_ITEM_ROW[int(m.group(1))]}, column J"),
+ ("man-days", "person-days"), ("man-day", "person-day"), ("Man-days", "Person-days"), ("man-weeks", "person-weeks"), ("man-week", "person-week"), ("man-months", "person-months"), ("man-month", "person-month"),
+ ("the departure", "the additional helpers assessed"), ("as the departure", "as 'Additional helpers assessed'"), ("Departure", "Additional helpers assessed"), ("departure", "additional helpers assessed"),
  ("assessment allowance", "Assessed basis"), ("Assessment allowance", "Assessed basis"), ("assessment-allowance", "Assessed-basis"),
  ("submitted programme", "SAMA Submitted Programme"), ("Submitted programme", "SAMA Submitted Programme"), ("submitted-programme", "SAMA Submitted Programme"),
  ("the programme as submitted", "the SAMA Submitted Programme"), ("programme exactly as submitted", "SAMA Submitted Programme exactly as submitted"),
@@ -1579,7 +1561,7 @@ for _n in ('Assessment', 'Build-Up', 'Build-Up Comparison', 'Programme'):
 bu['A4'] = ("How to read this tab: each line is quantity x rate = amount, with the reason beside it ('Basis': what the line buys, how many, how long, the rate and "
             "where the quantity comes from). Item totals go to column J of the 'Assessment' tab; the 'Return' link on each total row goes back there. A quantity in blue "
             "is a link to the 'Programme' tab row it is calculated from - click it. Units: a 'month' is 30.4 calendar days; a 'day' is one calendar day of hire or "
-            "attendance; a 'man-day' is one person for one working day; working days exclude Fridays. 'Needs confirmation' marks an assessed allowance the "
+            "attendance; a 'person-day' is one person for one working day; working days exclude Fridays. 'Needs confirmation' marks an assessed allowance the "
             "Contractor has not yet substantiated; 'Provisional' marks a scope or price awaiting a document. All amounts exclude VAT.")
 bu.row_dimensions[4].height = 84
 for row in bu.iter_rows(min_row=9, max_row=bu.max_row):
@@ -1635,7 +1617,11 @@ for row in pg.iter_rows(min_row=6, max_row=pg.max_row, max_col=10):
             aid = first_id(v)
             if aid in XROW: linkify(c, f"#'XER WBS'!A{XROW[aid]}")
         elif isinstance(v, str) and v.startswith('=SUMPRODUCT') and "'XER WBS'" in v:
-            linkify(c, f"#'XER WBS'!A{XA_HDR}")
+            ds = [dt.date(*map(int, m)) for m in re.findall(r'DATE\((\d+),(\d+),(\d+)\)', v)]
+            if len(ds) == 2:
+                w_end, w_start = ds
+                live = [a for a in acts if 'Tank Installation' in a['sec'] and a['start'] <= w_end and a['finish'] >= w_start]
+                if live: linkify(c, f"#'XER WBS'!A{XROW[live[0]['id']]}")
 # Section 5 rows: column A -> Build-Up line, column G -> source row on this tab
 for rr in range(first4, last4 + 1):
     b = pg.cell(rr, 2).value
