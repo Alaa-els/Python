@@ -1,0 +1,231 @@
+{
+  "schema": "workbook-readability-rules",
+  "version": "3.7",
+  "updated": "2026-10-01",
+  "note": "Mechanical checks only, and deliberately narrow. Style findings are warnings - prompts to look, not orders to change. Checks that cannot judge meaning have been removed rather than left to give false confidence. Clarity is a human review.",
+  "banned_phrases": {
+    "severity": "error",
+    "why": "Architecture description, tactical instructions and author voice must not appear in a workbook that may be issued.",
+    "groups": {
+      "architecture": [
+        "parametric",
+        "quantification engine",
+        "pricing engine",
+        "calculation engine -",
+        "the only tab edited",
+        "standard for every further",
+        "standard for every future",
+        "never a formula edit",
+        "type-agnostic",
+        "reusable model"
+      ],
+      "tactics": [
+        "concede early",
+        "costs credibility",
+        "deploy in the",
+        "revised away",
+        "expect concession",
+        "do not simply attack",
+        "our position is stronger",
+        "cheap ground",
+        "cite as corroboration",
+        "do not disclose",
+        "hold this point",
+        "keep in reserve",
+        "press for acceptance"
+      ],
+      "author_voice": [
+        "WTP measures",
+        "WTP's measure",
+        "we assess",
+        "our measure",
+        "our figure",
+        "our final position",
+        "as WTP correctly",
+        "user-authorised",
+        "mismatch stated plainly",
+        "to be recorded on 'Project Info'"
+      ],
+      "hedging": [
+        "should not be added together",
+        "assessed on different bases",
+        "without reading the note"
+      ],
+      "obsolete_instructions": [
+        "click each cover textbox",
+        "in the formula bar to make it dynamic"
+      ],
+      "invitations": [
+        "needs confirmation by the Contractor",
+        "pending the Contractor's substantiation",
+        "to be confirmed by the Contractor",
+        "issue to be confirmed"
+      ],
+      "labels": [
+        "Basis A",
+        "Basis B",
+        "man-days",
+        "man-day"
+      ]
+    },
+    "scan_note": "A scan for known tactical phrases. Passing is not proof that no tactical language exists - a blacklist is always incomplete.",
+    "all_sheet_groups": [
+      "tactics"
+    ],
+    "scope_note": "Tactical language is scanned on every sheet including hidden ones - a hidden tab stays inside the issued file and can be unhidden. Architecture, author voice, hedging and obsolete instructions are scanned on visible sheets only; they are communication failures, and a hidden helper tab has no reader to fail."
+  },
+  "corrupted_words": {
+    "severity": "error",
+    "why": "Unrestricted find-and-replace damage.",
+    "patterns": [
+      "sThece",
+      "STheCE",
+      "fThe\\b",
+      "\\bThes\\b",
+      "favTheable",
+      "pThes",
+      "COLThe",
+      "resThece",
+      "cThese",
+      "jThenal"
+    ]
+  },
+  "internal_codes": {
+    "severity": "warning",
+    "why": "A code must not carry the meaning. Flagged when a code opens a narrative cell, or is named as the scenario/risk/assumption doing the work. Document revisions and technical notation are not detected - that needs a human.",
+    "leading_code_patterns": [
+      "R\\d{1,2}",
+      "A\\d{1,2}",
+      "L\\d"
+    ],
+    "min_following_words": 3,
+    "unambiguous_shorthand": [
+      "TENT basis",
+      "SHOP basis",
+      "IFC-corrected basis",
+      "Interpretation A",
+      "Interpretation B",
+      "Interpretation C"
+    ],
+    "contextual_patterns": [
+      "\\b(?:scenario|issue|risk|assumption|basis|option)\\s+(R\\d{1,2}|A\\d{1,2}|L\\d)\\b",
+      "\\b(R\\d{1,2}|A\\d{1,2}|L\\d)\\s+(?:applies|governs|assumes|includes|excludes)\\b"
+    ]
+  },
+  "named_ranges": {
+    "severity": "error",
+    "why": "A reviewer clicking a figure must see where it was calculated, not what the author called it.",
+    "allowed_exact": [
+      "PROJECT_NAME",
+      "CLIENT",
+      "ADDRESS",
+      "CONTRACT_REF",
+      "CONTRACTOR",
+      "ENGINEER",
+      "COST_CONSULT",
+      "DOC_TITLE",
+      "DOC_DATE",
+      "DOC_REF",
+      "APP_LETTER",
+      "APP_DESC",
+      "List_Status",
+      "List_BasisOfRate",
+      "List_AssessmentOutcome",
+      "List_ContractualBasis",
+      "List_SubmissionType",
+      "List_RevisionType"
+    ],
+    "max_total": 24,
+    "excluded_from_count": [
+      "_xlnm.Print_Area",
+      "_xlnm.Print_Titles",
+      "_xlnm._FilterDatabase"
+    ],
+    "note": "Exact names only - a prefix allowance reopens the loophole. The first twelve are the document-control names created by the wtp-excel-format skill; the Cover and Appendix Cover textboxes link to them, so removing them breaks the covers. The six List_ names are the cross-sheet data-validation anchors mandated by contractor-proposal-assessment; Excel needs a defined name for validation across sheets. Add a further exact name only when another workbook feature genuinely requires one.",
+    "scope_note": "Both scopes are checked, and an approved name counts only at workbook scope. A sheet-scoped Calc_Total defeats the policy outright; a sheet-scoped PROJECT_NAME defeats it while appearing compliant. The approved names are all cross-sheet by nature - the Cover textboxes and the validation lists both need workbook scope."
+  },
+  "tab_architecture": {
+    "severity": "warning",
+    "max_visible_tabs": 8,
+    "first_tab_required": true,
+    "note": "Count only, and it is a warning. Whether a visible Inputs or Data tab is genuine working content is a human judgement. Workbooks that carry one tab per BOQ item - the pattern the ipc-template-generator skill produces - legitimately exceed the count; run those with --max-visible-tabs set to suit, or ignore the warning."
+  },
+  "first_tab": {
+    "severity": "warning",
+    "why": "Structural checks only. Counting cells does not measure readability and fails in both directions - a valid summary of three labels and three numbers is not almost empty, and four unrelated text cells are not an answer. Whether the tab answers purpose, result, basis and action is the human acceptance test.",
+    "warn_words_per_block": 70,
+    "block_min_chars": 120,
+    "tab_selection_note": "The first substantive visible tab. All leading document-control tabs are skipped by exact title - Project Info, Cover, Appendix Cover - because all three are visible while a workbook is being prepared for PDF issue. A tab called 'Cover Note - Summary' is substantive. If every visible tab is document control, there is no substantive tab and that is an error - the workbook answers nothing."
+  },
+  "status_labelling": {
+    "severity": "warning",
+    "why": "Zero must never silently mean unknown.",
+    "rate_header_keywords": [
+      "rate",
+      "price",
+      "unit cost",
+      "sar/",
+      "cost per"
+    ],
+    "status_header_keywords": [
+      "status",
+      "note",
+      "remark",
+      "basis",
+      "source",
+      "comment"
+    ],
+    "status_vocabulary": [
+      "established",
+      "not established",
+      "assessed",
+      "estimate",
+      "estimated",
+      "assumed",
+      "verify",
+      "tbc",
+      "outstanding",
+      "provisional",
+      "claimed",
+      "certified",
+      "contractual",
+      "budget",
+      "minimum priced",
+      "unestablished",
+      "excluded",
+      "nil",
+      "not applicable",
+      "n/a"
+    ],
+    "scope_note": "Conventional vertical rate tables only. Header rows are found anywhere on the sheet. A header row is split into blocks at blank header cells, so a neighbouring table cannot lend its status column, and a table ends at the row before the next rate header in the same column. A block must carry at least two headed columns, so a lone word 'Rate' in prose does not create a phantom table. NOT detected: transposed tables, and a rate column whose status sits outside its block.",
+    "header_max_words": 6,
+    "rate_linked_status_patterns": [
+      "\\b(?:rate|price|unit cost)\\s+(?:not established|provisional|excluded|tbc|to be confirmed|nil|assumed|estimated)\\b",
+      "\\b(?:not established|provisional|excluded|tbc|to be confirmed)\\s+(?:rate|price|unit cost)\\b"
+    ],
+    "matching_note": "Header keywords match as whole words in header-like cells of six words or fewer. 'Figures are shown separately' is not a rate column.",
+    "min_block_columns": 2
+  },
+  "integrity": {
+    "severity": "error",
+    "no_external_links": true,
+    "no_formula_errors": true,
+    "metadata_author_required": true,
+    "error_values": [
+      "#REF!",
+      "#VALUE!",
+      "#DIV/0!",
+      "#NAME?",
+      "#N/A",
+      "#NULL!",
+      "#NUM!",
+      "#SPILL!",
+      "#CALC!",
+      "#FIELD!",
+      "#BLOCKED!",
+      "#CONNECT!",
+      "#UNKNOWN!",
+      "#BUSY!"
+    ]
+  }
+}
