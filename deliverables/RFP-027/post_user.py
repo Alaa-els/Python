@@ -70,6 +70,13 @@ for name in BULLET_COLS:
             need = sum(max(1, math.ceil(len(p) / cpl)) for p in c.value.split('\n')) * (sz * 1.28) + 4
             cur = ws.row_dimensions[c.row].height
             if cur is None or need > cur: ws.row_dimensions[c.row].height = round(need, 1)
-u['Assessment'].page_setup.fitToHeight = 1
+u['Assessment'].page_setup.fitToHeight = 0   # one page wide, as every other tab; one-page-tall would print below 4 pt
+bu_ = u['Build-Up']
+bu_['B37'] = "Design engineer - design coordination and review of the supplier's calculations, method statements and ITPs"
+if 'prepared 21-Jul to 15-Aug-2026' not in bu_['G41'].value:
+    bu_['G41'] = bu_['G41'].value + "\n\u2022 Prepared 21-Jul to 15-Aug-2026, before the Item 1 site staff start on 22-Aug-2026; the design engineer at 2.1 reviews them, he does not write them"
+bc_ = u['Build-Up Comparison']
+for r in (76, 77, 78):
+    bc_.cell(r, 3).value = 'WT Partnership Aconex substantiation request dated 25-Aug-2026.'
 u.save('stageU.xlsx')
 print('phrases cleaned', n_ph, '| bulleted', n_bul, '| assessment same-tab links removed', n_rm)
